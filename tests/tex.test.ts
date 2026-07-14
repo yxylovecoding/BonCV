@@ -28,16 +28,29 @@ describe('TeX rendering', () => {
 
   it('references a sanitized local photo filename only when supplied by the build pipeline', () => {
     const tex = renderResumeTex(demoState, { ...demoState.presets[0], profileFields: ['photo'], includePhoto: true }, 'photo.png');
-    expect(tex).toContain('includegraphics[width=25mm,height=30mm,keepaspectratio]{photo.png}');
+    expect(tex).toContain('includegraphics[width=27mm,height=34mm,keepaspectratio]{photo.png}');
     expect(tex).not.toContain(demoState.profile.email);
+  });
+
+  it('uses the reference PDF header and section hierarchy', () => {
+    const state = structuredClone(demoState);
+    state.profile.politicalStatus = '中共党员';
+    state.profile.origin = '江苏省常州市';
+    const tex = renderResumeTex(state, state.presets[0]);
+    expect(tex).toContain(String.raw`\makebox[0pt][l]{\begin{minipage}[t][38mm][t]{\textwidth}`);
+    expect(tex).toContain(String.raw`\begin{minipage}[t][38mm][t]{0.45\textwidth}`);
+    expect(tex).toContain(String.raw`\cvprofileline{手机}{13800000000}`);
+    expect(tex).toContain(String.raw`\cvprofileline{政治面貌}{中共党员}`);
+    expect(tex).toContain(String.raw`\definecolor{keycolor}{RGB}{102,8,116}`);
+    expect(tex).toContain(String.raw`\cveducation{示例大学}{机械专业}{硕士（推免入学）}{2025-09 -- 至今}`);
+    expect(tex).toContain(String.raw`\item \textbf{项目介绍：}在边缘计算平台实现大语言模型离线部署。`);
   });
 
   it('renders legacy middle-dot headlines as separate lines', () => {
     const state = structuredClone(demoState);
     state.profile.headline = ['长期实习 · 每周到岗 4-5 天'];
     const tex = renderResumeTex(state, state.presets[0]);
-    expect(tex).toContain(String.raw`\textbf{长期实习}}\\`);
-    expect(tex).toContain(String.raw`\textbf{每周到岗 4-5 天}}\\`);
+    expect(tex).toContain('长期实习\\par\n每周到岗 4-5 天');
     expect(tex).not.toContain('长期实习 · 每周到岗');
   });
 
