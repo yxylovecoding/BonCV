@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireSession } from '@/lib/auth';
 import { readArtifact } from '@/lib/artifacts';
+import { attachmentDisposition } from '@/lib/download';
 import { getState } from '@/lib/state';
 
 export async function GET(_: Request, context: { params: Promise<{ id: string; kind: string }> }) {
@@ -15,7 +16,7 @@ export async function GET(_: Request, context: { params: Promise<{ id: string; k
   return new NextResponse(artifact.stream, {
     headers: {
       'Content-Type': kind === 'pdf' ? 'application/pdf' : 'application/x-tex; charset=utf-8',
-      'Content-Disposition': `attachment; filename="BonCV-${build.presetName.replace(/[^a-zA-Z0-9\u4e00-\u9fff]+/g, '-')}.${extension}"`,
+      'Content-Disposition': attachmentDisposition(build.presetName, extension),
       'Cache-Control': 'private, no-store',
     },
   });
