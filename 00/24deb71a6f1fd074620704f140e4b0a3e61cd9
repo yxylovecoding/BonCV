@@ -1,0 +1,29 @@
+app/api/files/[id]/[kind]/route.ts
+  s_27e9993f213ede::t_1963e774ab6050 4,7,16,20-22,24
+app/globals.css
+  s_27e9993f213ede::t_580586a0aea33f 110,124-133,177,186,195-203
+components/BonCvApp.tsx
+  s_27e9993f213ede::t_a7b1ad3372a1a6 5-6,34,73,85-98,145,246,448-452,476-491
+lib/download.ts
+  s_27e9993f213ede::t_13082c03707460 1,7-15
+tests/download.test.ts
+  s_27e9993f213ede::t_1f3eec4724eb2e 2,11-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "0024deb71a6f1fd074620704f140e4b0a3e61cd9",
+  "prompts": {},
+  "sessions": {
+    "s_27e9993f213ede": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6012-fd13-7a12-a360-e10d52f9f764",
+        "model": "unknown"
+      },
+      "human_author": "yxylovecoding <yangxy1229@163.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
