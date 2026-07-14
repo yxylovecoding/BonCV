@@ -2,8 +2,8 @@
 
 import {
   Archive, ArrowDown, ArrowUp, BookOpen, Check, ChevronRight, CircleAlert, Copy, Download,
-  FileCode2, FileText, KeyRound, Link2, LoaderCircle, LogOut, Plus, RefreshCw, Save,
-  Settings2, ShieldCheck, Sparkles, Trash2, UserRound,
+  ExternalLink, Eye, FileCode2, FileText, KeyRound, Link2, LoaderCircle, LogOut, Plus,
+  RefreshCw, Save, Settings2, ShieldCheck, Sparkles, Trash2, UserRound, X,
 } from 'lucide-react';
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
@@ -31,7 +31,7 @@ const navItems: Array<{ id: Tab; label: string; icon: typeof UserRound }> = [
 const tabMeta: Record<Tab, { eyebrow: string; title: string; description: string }> = {
   content: { eyebrow: 'CONTENT LIBRARY', title: '内容库', description: '维护基本信息与经历，修改后自动保存。' },
   presets: { eyebrow: 'RESUME PRESETS', title: '简历方案', description: '选择字段与经历，调整输出顺序。' },
-  builds: { eyebrow: 'EXPORT HISTORY', title: '生成记录', description: '下载已生成的 TeX 与 PDF 文件。' },
+  builds: { eyebrow: 'EXPORT HISTORY', title: '生成记录', description: '预览或下载已生成的 TeX 与 PDF 文件。' },
   keys: { eyebrow: 'INTEGRATIONS', title: '连接密钥', description: '管理 BonBills FIRE 的只读连接。' },
 };
 
@@ -70,6 +70,7 @@ export default function BonCvApp() {
   const [revealedKey, setRevealedKey] = useState('');
   const [keyLabel, setKeyLabel] = useState('BonBills FIRE');
   const [busyPreset, setBusyPreset] = useState<string | null>(null);
+  const [previewBuildId, setPreviewBuildId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const response = await fetch('/api/state', { cache: 'no-store' });
@@ -80,6 +81,20 @@ export default function BonCvApp() {
   useEffect(() => {
     load().catch(() => setMessage('暂时无法加载内容，请刷新重试。'));
   }, [load]);
+
+  useEffect(() => {
+    if (!previewBuildId) return;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setPreviewBuildId(null);
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [previewBuildId]);
 
   const mutate = useCallback((action: (draft: AdminState) => void) => {
     setData((current) => {
@@ -127,6 +142,7 @@ export default function BonCvApp() {
   }, [data, dirtyVersion]);
 
   const allEntries = useMemo(() => data?.sections.flatMap((section) => section.entries) ?? [], [data]);
+  const previewBuild = data?.builds.find((build) => build.id === previewBuildId && build.pdfPath) ?? null;
 
   if (!data) {
     return <main className="loading-page"><div className="brand-orb">B</div><LoaderCircle className="spin" /><p>正在打开职业档案</p></main>;
@@ -227,7 +243,7 @@ export default function BonCvApp() {
       if (!response.ok) throw new Error(result.error || '生成失败');
       if (result.state) setData(result.state);
       setTab('builds');
-      setMessage('简历已生成，可以下载 TeX 和 PDF。');
+      setMessage('简历已生成，可以预览或下载 TeX 和 PDF。');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '生成失败');
     } finally {
@@ -429,7 +445,11 @@ export default function BonCvApp() {
               <article className="build-card" key={build.id}>
                 <div className={`file-icon ${build.status}`}><FileText size={21} /></div>
                 <div className="build-info"><strong>{build.presetName}</strong><span>{formatTime(build.createdAt)} · {build.status === 'ready' ? `${build.pageCount ?? '—'} 页 PDF` : 'TeX 已生成'}</span></div>
-                <div className="download-group"><a href={`/api/files/${build.id}/tex`} title="下载 TeX"><FileCode2 size={17} /></a>{build.pdfPath && <a href={`/api/files/${build.id}/pdf`} title="下载 PDF"><Download size={17} /></a>}</div>
+                <div className="download-group">
+                  <a href={`/api/files/${build.id}/tex`} aria-label={`下载 ${build.presetName} 的 TeX`} title="下载 TeX"><FileCode2 size={17} /></a>
+                  {build.pdfPath && <button type="button" aria-label={`预览 ${build.presetName} 的 PDF`} title="预览 PDF" onClick={() => setPreviewBuildId(build.id)}><Eye size={17} /></button>}
+                  {build.pdfPath && <a href={`/api/files/${build.id}/pdf`} aria-label={`下载 ${build.presetName} 的 PDF`} title="下载 PDF"><Download size={17} /></a>}
+                </div>
               </article>
             ))}
           </div>
@@ -453,6 +473,22 @@ export default function BonCvApp() {
       </div>
 
       <nav className="bottom-nav" aria-label="主要导航">{navItems.map((item) => { const Icon = item.icon; return <button key={item.id} className={tab === item.id ? 'active' : ''} aria-current={tab === item.id ? 'page' : undefined} onClick={() => setTab(item.id)}><Icon size={20} /><span>{item.label}</span></button>; })}</nav>
+
+      {previewBuild && (
+        <div className="pdf-preview-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPreviewBuildId(null); }}>
+          <section className="pdf-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="pdf-preview-title">
+            <header className="pdf-preview-header">
+              <div><p className="eyebrow">PDF PREVIEW</p><h2 id="pdf-preview-title">{previewBuild.presetName}</h2></div>
+              <div className="pdf-preview-actions">
+                <a href={`/api/files/${previewBuild.id}/pdf?preview=1`} target="_blank" rel="noreferrer" title="在新窗口打开"><ExternalLink size={17} /><span>新窗口</span></a>
+                <a href={`/api/files/${previewBuild.id}/pdf`} title="下载 PDF"><Download size={17} /><span>下载</span></a>
+                <button type="button" onClick={() => setPreviewBuildId(null)} aria-label="关闭 PDF 预览" title="关闭"><X size={19} /></button>
+              </div>
+            </header>
+            <iframe src={`/api/files/${previewBuild.id}/pdf?preview=1`} title={`${previewBuild.presetName} PDF 预览`} />
+          </section>
+        </div>
+      )}
     </div>
   );
 }

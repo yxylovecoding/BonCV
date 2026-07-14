@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { requireSession } from '@/lib/auth';
 import { readArtifact } from '@/lib/artifacts';
-import { attachmentDisposition } from '@/lib/download';
+import { attachmentDisposition, inlineDisposition } from '@/lib/download';
 import { getState } from '@/lib/state';
 
-export async function GET(_: Request, context: { params: Promise<{ id: string; kind: string }> }) {
+export async function GET(request: Request, context: { params: Promise<{ id: string; kind: string }> }) {
   if (!(await requireSession())) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   const { id, kind } = await context.params;
   const build = (await getState()).builds.find((item) => item.id === id);
@@ -13,11 +13,15 @@ export async function GET(_: Request, context: { params: Promise<{ id: string; k
   if (!location) return NextResponse.json({ error: 'not found' }, { status: 404 });
   const artifact = await readArtifact(location);
   const extension = kind === 'pdf' ? 'pdf' : 'tex';
+  const shouldPreview = kind === 'pdf' && new URL(request.url).searchParams.get('preview') === '1';
   return new NextResponse(artifact.stream, {
     headers: {
       'Content-Type': kind === 'pdf' ? 'application/pdf' : 'application/x-tex; charset=utf-8',
-      'Content-Disposition': attachmentDisposition(build.presetName, extension),
+      'Content-Disposition': shouldPreview
+        ? inlineDisposition(build.presetName, extension)
+        : attachmentDisposition(build.presetName, extension),
       'Cache-Control': 'private, no-store',
+      'X-Content-Type-Options': 'nosniff',
     },
   });
 }
