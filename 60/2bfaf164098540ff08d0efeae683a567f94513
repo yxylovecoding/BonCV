@@ -1,0 +1,31 @@
+app/access/page.tsx
+  s_02419d73a9345a::t_652d2d736b7bec 25
+app/api/logout/route.ts
+  s_02419d73a9345a::t_461e30ed24c688 1-15
+app/globals.css
+  s_02419d73a9345a::t_10485ea5f42989 28,278-280
+components/BonCvApp.tsx
+  s_02419d73a9345a::t_aed3a73bf94061 5-6,261-268,303,323,326
+proxy.ts
+  s_02419d73a9345a::t_402b3222f218d8 10
+tests/logout.test.ts
+  s_02419d73a9345a::t_b2fcb4da567a91 1-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "602bfaf164098540ff08d0efeae683a567f94513",
+  "prompts": {},
+  "sessions": {
+    "s_02419d73a9345a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f5f3a-b283-7231-a861-9494f8612841",
+        "model": "unknown"
+      },
+      "human_author": "yxylovecoding <yangxy1229@163.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
