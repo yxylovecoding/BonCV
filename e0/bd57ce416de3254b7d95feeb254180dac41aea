@@ -1,0 +1,35 @@
+app/globals.css
+  s_27e9993f213ede::t_acba416b85b6d0 67-77,120,196
+components/BonCvApp.tsx
+  s_27e9993f213ede::t_c1a5a8866b504a 4-6,9-10,65-147,159,231-235,253-268,318,320-324,328,330-331,468-485,544-570
+lib/order.ts
+  s_27e9993f213ede::t_5d49f412aaf550 1-16
+lib/profile.ts
+  s_27e9993f213ede::t_001b47b4d4e152 1-6
+lib/state.ts
+  s_27e9993f213ede::t_158c0ecc91c3c0 5,34-40,42,50,53
+lib/tex.ts
+  s_27e9993f213ede::t_897fba0057370d 2,51
+tests/order.test.ts
+  s_27e9993f213ede::t_cc5358d776989e 1-13
+tests/tex.test.ts
+  s_27e9993f213ede::t_dbf36c144dce14 34-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "e0bd57ce416de3254b7d95feeb254180dac41aea",
+  "prompts": {},
+  "sessions": {
+    "s_27e9993f213ede": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6012-fd13-7a12-a360-e10d52f9f764",
+        "model": "unknown"
+      },
+      "human_author": "yxylovecoding <yangxy1229@163.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
