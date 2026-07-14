@@ -2,8 +2,8 @@
 
 import {
   Archive, ArrowDown, ArrowUp, BookOpen, Check, ChevronRight, CircleAlert, Copy, Download,
-  FileCode2, FileText, KeyRound, Link2, LoaderCircle, Plus, RefreshCw, Save, Settings2,
-  Sparkles, Trash2, UserRound,
+  FileCode2, FileText, KeyRound, Link2, LoaderCircle, LogOut, Plus, RefreshCw, Save,
+  Settings2, ShieldCheck, Sparkles, Trash2, UserRound,
 } from 'lucide-react';
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
@@ -258,6 +258,14 @@ export default function BonCvApp() {
     else setMessage('照片上传失败');
   }
 
+  async function logout() {
+    try {
+      await fetch('/api/logout', { method: 'POST' });
+    } finally {
+      window.location.assign('/access');
+    }
+  }
+
   return (
     <div className="app-shell">
       <aside className="desktop-sidebar">
@@ -292,6 +300,7 @@ export default function BonCvApp() {
             <div className="brand-orb small">B</div>
             <div><p className="eyebrow">YOUR CAREER, COMPOSED</p><h1>BonCV</h1></div>
             <StatusPill state={saveState} />
+            <button className="mobile-logout" aria-label="退出登录" title="退出安全会话" onClick={logout}><LogOut size={16} /></button>
           </div>
           <div className="hero-card">
             <div>
@@ -311,8 +320,10 @@ export default function BonCvApp() {
             <p>{tabMeta[tab].description}</p>
           </div>
           <div className="workspace-actions">
+            <span className="session-label"><ShieldCheck size={15} />安全会话</span>
             <StatusPill state={saveState} />
             {tab === 'presets' && <button className="primary-button compact" onClick={createPreset}><Plus size={16} />新方案</button>}
+            <button className="logout-button" onClick={logout}><LogOut size={15} />退出登录</button>
           </div>
         </header>
 
