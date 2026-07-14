@@ -28,6 +28,13 @@ const navItems: Array<{ id: Tab; label: string; icon: typeof UserRound }> = [
   { id: 'keys', label: '连接', icon: Link2 },
 ];
 
+const tabMeta: Record<Tab, { eyebrow: string; title: string; description: string }> = {
+  content: { eyebrow: 'CONTENT LIBRARY', title: '内容库', description: '维护基本信息与经历，修改后自动保存。' },
+  presets: { eyebrow: 'RESUME PRESETS', title: '简历方案', description: '选择字段与经历，调整输出顺序。' },
+  builds: { eyebrow: 'EXPORT HISTORY', title: '生成记录', description: '下载已生成的 TeX 与 PDF 文件。' },
+  keys: { eyebrow: 'INTEGRATIONS', title: '连接密钥', description: '管理 BonBills FIRE 的只读连接。' },
+};
+
 function id(prefix: string) {
   return `${prefix}-${crypto.randomUUID()}`;
 }
@@ -124,6 +131,13 @@ export default function BonCvApp() {
   if (!data) {
     return <main className="loading-page"><div className="brand-orb">B</div><LoaderCircle className="spin" /><p>正在打开职业档案</p></main>;
   }
+
+  const navCounts: Record<Tab, number> = {
+    content: allEntries.length,
+    presets: data.presets.length,
+    builds: data.builds.length,
+    keys: data.integrationKeys.filter((key) => !key.revokedAt).length,
+  };
 
   function updateProfile(field: keyof AdminState['profile'], value: string | string[] | null) {
     mutate((draft) => { (draft.profile[field] as typeof value) = value; });
@@ -246,28 +260,67 @@ export default function BonCvApp() {
 
   return (
     <div className="app-shell">
-      <header className="topbar">
-        <div className="brand-row">
+      <aside className="desktop-sidebar">
+        <div className="sidebar-brand">
           <div className="brand-orb small">B</div>
           <div><p className="eyebrow">YOUR CAREER, COMPOSED</p><h1>BonCV</h1></div>
-          <StatusPill state={saveState} />
         </div>
-        <div className="hero-card">
-          <div>
-            <span className="hero-kicker">职业内容库</span>
-            <strong>{allEntries.length}</strong>
-            <span>段经历可自由组合</span>
+        <nav className="side-nav" aria-label="主要导航">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button key={item.id} className={tab === item.id ? 'active' : ''} aria-current={tab === item.id ? 'page' : undefined} onClick={() => setTab(item.id)}>
+                <Icon size={18} />
+                <span>{item.label}</span>
+                <small>{navCounts[item.id]}</small>
+              </button>
+            );
+          })}
+        </nav>
+        <div className="sidebar-summary">
+          <p>职业内容库</p>
+          <strong>{allEntries.length}</strong>
+          <span>段经历可自由组合</span>
+          <div><span><b>{data.presets.length}</b> 套方案</span><span><b>{data.builds.length}</b> 次生成</span></div>
+        </div>
+        <div className="sidebar-status"><StatusPill state={saveState} /><span>Revision {data.revision}</span></div>
+      </aside>
+
+      <div className="workspace-shell">
+        <header className="topbar mobile-topbar">
+          <div className="brand-row">
+            <div className="brand-orb small">B</div>
+            <div><p className="eyebrow">YOUR CAREER, COMPOSED</p><h1>BonCV</h1></div>
+            <StatusPill state={saveState} />
           </div>
-          <div className="hero-stat"><span>{data.presets.length}</span>套方案</div>
-          <div className="hero-stat"><span>{data.builds.length}</span>次生成</div>
-        </div>
-      </header>
+          <div className="hero-card">
+            <div>
+              <span className="hero-kicker">职业内容库</span>
+              <strong>{allEntries.length}</strong>
+              <span>段经历可自由组合</span>
+            </div>
+            <div className="hero-stat"><span>{data.presets.length}</span>套方案</div>
+            <div className="hero-stat"><span>{data.builds.length}</span>次生成</div>
+          </div>
+        </header>
 
-      {message && <div className="notice"><Sparkles size={16} /><span>{message}</span><button onClick={() => setMessage('')}>×</button></div>}
+        <header className="workspace-header">
+          <div>
+            <p className="eyebrow">{tabMeta[tab].eyebrow}</p>
+            <h2>{tabMeta[tab].title}</h2>
+            <p>{tabMeta[tab].description}</p>
+          </div>
+          <div className="workspace-actions">
+            <StatusPill state={saveState} />
+            {tab === 'presets' && <button className="primary-button compact" onClick={createPreset}><Plus size={16} />新方案</button>}
+          </div>
+        </header>
 
-      <main className="main-content">
+        {message && <div className="notice"><Sparkles size={16} /><span>{message}</span><button aria-label="关闭提示" onClick={() => setMessage('')}>×</button></div>}
+
+        <main className="main-content">
         {tab === 'content' && (
-          <div className="stack">
+          <div className="stack content-workspace">
             <section className="panel profile-panel">
               <div className="panel-heading"><div><p className="eyebrow">PROFILE</p><h2>基本信息</h2></div><UserRound size={21} /></div>
               <div className="photo-row">
@@ -329,8 +382,8 @@ export default function BonCvApp() {
         )}
 
         {tab === 'presets' && (
-          <div className="stack">
-            <div className="section-intro"><div><p className="eyebrow">COMPOSITIONS</p><h2>简历方案</h2><p>为不同岗位保留不同的内容组合。</p></div><button className="primary-button compact" onClick={createPreset}><Plus size={16} />新方案</button></div>
+          <div className="stack presets-workspace">
+            <div className="section-intro mobile-section-intro"><div><p className="eyebrow">COMPOSITIONS</p><h2>简历方案</h2><p>为不同岗位保留不同的内容组合。</p></div><button className="primary-button compact" onClick={createPreset}><Plus size={16} />新方案</button></div>
             {data.presets.map((preset) => (
               <section className="panel preset-card" key={preset.id}>
                 <div className="panel-heading">
@@ -359,8 +412,8 @@ export default function BonCvApp() {
         )}
 
         {tab === 'builds' && (
-          <div className="stack">
-            <div className="section-intro"><div><p className="eyebrow">EXPORTS</p><h2>生成记录</h2><p>每个方案保留最近 20 次输出。</p></div><Archive size={24} /></div>
+          <div className="stack builds-workspace">
+            <div className="section-intro mobile-section-intro"><div><p className="eyebrow">EXPORTS</p><h2>生成记录</h2><p>每个方案保留最近 20 次输出。</p></div><Archive size={24} /></div>
             {data.builds.length === 0 ? <div className="empty-state"><FileText size={34} /><h3>还没有生成记录</h3><p>前往“方案”，选择内容后生成第一份简历。</p><button className="soft-button" onClick={() => setTab('presets')}>选择方案</button></div> : data.builds.map((build) => (
               <article className="build-card" key={build.id}>
                 <div className={`file-icon ${build.status}`}><FileText size={21} /></div>
@@ -372,8 +425,8 @@ export default function BonCvApp() {
         )}
 
         {tab === 'keys' && (
-          <div className="stack">
-            <div className="section-intro"><div><p className="eyebrow">CONNECTIONS</p><h2>连接密钥</h2><p>让 BonBills FIRE 只读最小必要字段。</p></div><KeyRound size={24} /></div>
+          <div className="stack keys-workspace">
+            <div className="section-intro mobile-section-intro"><div><p className="eyebrow">CONNECTIONS</p><h2>连接密钥</h2><p>让 BonBills FIRE 只读最小必要字段。</p></div><KeyRound size={24} /></div>
             <section className="panel key-create">
               <div className="scope-note"><div className="scope-icon"><Check size={16} /></div><div><strong>fire:read</strong><span>仅包含出生日期、学历、毕业日期与数据版本</span></div></div>
               <TextField label="密钥名称" value={keyLabel} onChange={setKeyLabel} />
@@ -385,9 +438,10 @@ export default function BonCvApp() {
             </section>
           </div>
         )}
-      </main>
+        </main>
+      </div>
 
-      <nav className="bottom-nav" aria-label="主要导航">{navItems.map((item) => { const Icon = item.icon; return <button key={item.id} className={tab === item.id ? 'active' : ''} onClick={() => setTab(item.id)}><Icon size={20} /><span>{item.label}</span></button>; })}</nav>
+      <nav className="bottom-nav" aria-label="主要导航">{navItems.map((item) => { const Icon = item.icon; return <button key={item.id} className={tab === item.id ? 'active' : ''} aria-current={tab === item.id ? 'page' : undefined} onClick={() => setTab(item.id)}><Icon size={20} /><span>{item.label}</span></button>; })}</nav>
     </div>
   );
 }
