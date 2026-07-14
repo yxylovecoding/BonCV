@@ -1,0 +1,16 @@
+.next/
+.vercel/
+node_modules/
+.pnpm-store/
+.env*
+!.env.example
+output/
+tmp/
+vendor/tectonic/bin/
+vendor/tectonic/bundle/
+vendor/tectonic/cache/
+vendor/tectonic/warmup/
+*.tsbuildinfo
+.DS_Store
+*.local.json
+private/
