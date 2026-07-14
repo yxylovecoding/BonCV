@@ -1,0 +1,41 @@
+app/api/resumes/[id]/build/route.ts
+  s_27e9993f213ede::t_71f57ad254de62 31,43,45
+app/globals.css
+  s_27e9993f213ede::t_f618a0e225c4c5 120-129,137-143,199-201,216
+components/BonCvApp.tsx
+  s_27e9993f213ede::t_bf51e270c68a67 5-6,10,13,29,36-37,160,238,295,308,311,323-346,439,458-459,472,561,566,596-618,629-650
+lib/builds.ts
+  s_27e9993f213ede::t_dd9beb880deebc 3-8,18-27
+lib/fixtures.ts
+  s_27e9993f213ede::t_1daf998464cd02 57
+lib/state.ts
+  s_27e9993f213ede::t_ca859572cabcee 6,35-42,46-47
+lib/tex.ts
+  s_27e9993f213ede::t_ca0c6f92d9d93c 36-45,52
+lib/types.ts
+  s_27e9993f213ede::t_8a053d81c8b0db 41-47,55,65
+lib/validation.ts
+  s_27e9993f213ede::t_4ed7d5e67ce2c7 42-48,56
+tests/builds.test.ts
+  s_27e9993f213ede::t_916094cfba6ffd 2,10,28-33
+tests/tex.test.ts
+  s_27e9993f213ede::t_e3c55969d1bab3 43-57
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "787fc46bb52a437ed38b8698a438709fbc19d323",
+  "prompts": {},
+  "sessions": {
+    "s_27e9993f213ede": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6012-fd13-7a12-a360-e10d52f9f764",
+        "model": "unknown"
+      },
+      "human_author": "yxylovecoding <yangxy1229@163.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
