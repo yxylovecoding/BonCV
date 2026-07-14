@@ -1,0 +1,25 @@
+app/api/files/[id]/[kind]/route.ts
+  s_02419d73a9345a::t_28dbfab071600e 4,19
+lib/download.ts
+  s_02419d73a9345a::t_70c35830be78d1 1-8
+tests/download.test.ts
+  s_02419d73a9345a::t_e8e5ff773b74cf 1-11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "a8334c61e59ecff936d141dbede6c598ec0eb066",
+  "prompts": {},
+  "sessions": {
+    "s_02419d73a9345a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f5f3a-b283-7231-a861-9494f8612841",
+        "model": "unknown"
+      },
+      "human_author": "yxylovecoding <yangxy1229@163.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
