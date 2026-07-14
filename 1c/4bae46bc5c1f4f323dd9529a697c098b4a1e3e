@@ -1,0 +1,23 @@
+lib/tex.ts
+  s_27e9993f213ede::t_5d4df34d0178f4 3,21-31,33-44,47-60,62-68,87-93,96-118,129-130,134-135,137-146,148,152
+tests/tex.test.ts
+  s_27e9993f213ede::t_18d89f7de46756 31,35-48,53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "1c4bae46bc5c1f4f323dd9529a697c098b4a1e3e",
+  "prompts": {},
+  "sessions": {
+    "s_27e9993f213ede": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6012-fd13-7a12-a360-e10d52f9f764",
+        "model": "unknown"
+      },
+      "human_author": "yxylovecoding <yangxy1229@163.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
