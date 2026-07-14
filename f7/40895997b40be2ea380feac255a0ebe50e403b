@@ -1,0 +1,23 @@
+app/globals.css
+  s_02419d73a9345a::t_f587c11e682e94 22-23,167-325
+components/BonCvApp.tsx
+  s_02419d73a9345a::t_46e8591c3887cd 31-37,135-141,263-264,268-307,309-311,313-317,319,321,323,385-386,415-416,428-429,441-442,444
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "f740895997b40be2ea380feac255a0ebe50e403b",
+  "prompts": {},
+  "sessions": {
+    "s_02419d73a9345a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f5f3a-b283-7231-a861-9494f8612841",
+        "model": "unknown"
+      },
+      "human_author": "yxylovecoding <yangxy1229@163.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
