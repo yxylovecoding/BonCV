@@ -2,6 +2,7 @@ import { Redis } from '@upstash/redis';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { demoState } from './fixtures';
+import { normalizeHeadlineItems } from './profile';
 import type { AdminState, BonCvState, IntegrationKey } from './types';
 
 const STATE_KEY = 'boncv:state:v1';
@@ -30,8 +31,15 @@ async function writeLocal(state: BonCvState) {
   await fs.writeFile(LOCAL_STATE_PATH, JSON.stringify(state, null, 2));
 }
 
+function normalizeState(state: BonCvState): BonCvState {
+  return {
+    ...state,
+    profile: { ...state.profile, headline: normalizeHeadlineItems(state.profile.headline) },
+  };
+}
+
 export async function getState(): Promise<BonCvState> {
-  if (!hasRedis()) return readLocal();
+  if (!hasRedis()) return normalizeState(await readLocal());
   const stored = await redis().get<BonCvState>(STATE_KEY);
   if (stored) {
     const keys = stored.integrationKeys.map((key) => `boncv:key-used:${key.id}`);
@@ -39,10 +47,10 @@ export async function getState(): Promise<BonCvState> {
       const usedAt = await redis().mget<Array<string | null>>(...keys);
       stored.integrationKeys.forEach((key, index) => { key.lastUsedAt = usedAt[index] ?? key.lastUsedAt; });
     }
-    return stored;
+    return normalizeState(stored);
   }
   await redis().set(STATE_KEY, demoState, { nx: true });
-  return (await redis().get<BonCvState>(STATE_KEY)) ?? structuredClone(demoState);
+  return normalizeState((await redis().get<BonCvState>(STATE_KEY)) ?? structuredClone(demoState));
 }
 
 export async function replaceState(next: BonCvState) {

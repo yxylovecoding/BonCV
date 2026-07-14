@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { normalizeHeadlineItems } from './profile';
 import type { BonCvState, CvEntry, ResumePreset } from './types';
 
 export function texEscape(value: string) {
@@ -47,7 +48,7 @@ export function renderResumeTex(state: BonCvState, preset: ResumePreset, photoFi
     fields.has('politicalStatus') && state.profile.politicalStatus ? `政治面貌：${state.profile.politicalStatus}` : '',
     fields.has('origin') && state.profile.origin ? `籍贯：${state.profile.origin}` : '',
   ].filter(Boolean).map(texEscape);
-  const headline = fields.has('headline') ? state.profile.headline.filter(Boolean).map((item) => `\\textcolor{keycolor}{\\textbf{${texEscape(item)}}}\\\\`).join('\n') : '';
+  const headline = fields.has('headline') ? normalizeHeadlineItems(state.profile.headline).map((item) => `\\textcolor{keycolor}{\\textbf{${texEscape(item)}}}\\\\`).join('\n') : '';
   const identity = photoFilename
     ? `\\begin{minipage}[c]{0.78\\textwidth}{\\zihao{-1}\\bfseries\\ziju{0.35}${texEscape(state.profile.name)}}\\end{minipage}\\hfill\\begin{minipage}[c]{0.16\\textwidth}\\raggedleft\\includegraphics[width=25mm,height=30mm,keepaspectratio]{${texEscape(photoFilename)}}\\end{minipage}\\par\\vspace{4pt}`
     : `\\begin{center}{\\zihao{-1}\\bfseries\\ziju{0.35}${texEscape(state.profile.name)}}\\\\[4pt]\\end{center}`;

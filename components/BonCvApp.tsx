@@ -1,11 +1,13 @@
 'use client';
 
 import {
-  Archive, ArrowDown, ArrowUp, BookOpen, Check, ChevronRight, CircleAlert, Copy, Download,
-  ExternalLink, Eye, FileCode2, FileText, KeyRound, Link2, LoaderCircle, LogOut, Plus,
-  RefreshCw, Save, Settings2, ShieldCheck, Sparkles, Trash2, UserRound, X,
+  Archive, BookOpen, Check, ChevronRight, CircleAlert, Copy, Download, ExternalLink, Eye,
+  FileCode2, FileText, GripVertical, KeyRound, Link2, LoaderCircle, LogOut, Plus, RefreshCw,
+  Save, Settings2, ShieldCheck, Sparkles, Trash2, UserRound, X,
 } from 'lucide-react';
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
+import { completeOrder, reorderById } from '@/lib/order';
 import type {
   AdminState, CvEntry, CvSection, ProfileField, ResumePreset, SectionKind,
 } from '@/lib/types';
@@ -60,6 +62,89 @@ function StatusPill({ state }: { state: SaveState }) {
   return <span className="save-pill"><Save size={13} />自动保存</span>;
 }
 
+interface SortableListProps<T> {
+  items: T[];
+  getId: (item: T) => string;
+  label: string;
+  className: string;
+  onMove: (activeId: string, overId: string) => void;
+  renderItem: (item: T, index: number, handle: ReactNode) => ReactNode;
+}
+
+function SortableList<T>({ items, getId, label, className, onMove, renderItem }: SortableListProps<T>) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const activeIdRef = useRef<string | null>(null);
+  const lastOverIdRef = useRef<string | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+
+  function finishDrag(event: React.PointerEvent<HTMLButtonElement>) {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    activeIdRef.current = null;
+    lastOverIdRef.current = null;
+    setDraggingId(null);
+  }
+
+  return (
+    <div ref={containerRef} className={className} role="list" aria-label={`${label}排序列表`}>
+      {items.map((item, index) => {
+        const itemId = getId(item);
+        const handle = (
+          <button
+            type="button"
+            className="drag-handle"
+            aria-label={`拖动调整${label}顺序`}
+            title="拖动调整顺序"
+            onPointerDown={(event) => {
+              if (event.button !== 0) return;
+              event.preventDefault();
+              event.currentTarget.setPointerCapture(event.pointerId);
+              activeIdRef.current = itemId;
+              lastOverIdRef.current = itemId;
+              setDraggingId(itemId);
+            }}
+            onPointerMove={(event) => {
+              const activeId = activeIdRef.current;
+              if (!activeId) return;
+              const target = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>('[data-sortable-id]');
+              if (!target || !containerRef.current?.contains(target)) return;
+              const overId = target.dataset.sortableId;
+              if (!overId || overId === lastOverIdRef.current) return;
+              lastOverIdRef.current = overId;
+              if (overId !== activeId) onMove(activeId, overId);
+            }}
+            onPointerUp={finishDrag}
+            onPointerCancel={finishDrag}
+            onKeyDown={(event) => {
+              if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+              event.preventDefault();
+              const targetIndex = index + (event.key === 'ArrowUp' ? -1 : 1);
+              if (targetIndex >= 0 && targetIndex < items.length) onMove(itemId, getId(items[targetIndex]));
+            }}
+          >
+            <GripVertical size={17} />
+          </button>
+        );
+        return <div className={`sortable-item ${draggingId === itemId ? 'is-dragging' : ''}`} data-sortable-id={itemId} role="listitem" key={itemId}>{renderItem(item, index, handle)}</div>;
+      })}
+    </div>
+  );
+}
+
+interface HeadlineItem {
+  id: string;
+  index: number;
+  value: string;
+}
+
+function headlineItems(values: string[], stableIds: string[]): HeadlineItem[] {
+  return values.map((value, index) => ({ id: stableIds[index], index, value }));
+}
+
+function orderedItems<T extends { id: string }>(items: T[], order: string[]) {
+  const byId = new Map(items.map((item) => [item.id, item]));
+  return completeOrder(items.map((item) => item.id), order).map((id) => byId.get(id)).filter((item): item is T => Boolean(item));
+}
+
 export default function BonCvApp() {
   const [data, setData] = useState<AdminState | null>(null);
   const [tab, setTab] = useState<Tab>('content');
@@ -71,6 +156,7 @@ export default function BonCvApp() {
   const [keyLabel, setKeyLabel] = useState('BonBills FIRE');
   const [busyPreset, setBusyPreset] = useState<string | null>(null);
   const [previewBuildId, setPreviewBuildId] = useState<string | null>(null);
+  const headlineIdsRef = useRef<string[]>([]);
 
   const load = useCallback(async () => {
     const response = await fetch('/api/state', { cache: 'no-store' });
@@ -142,6 +228,11 @@ export default function BonCvApp() {
   }, [data, dirtyVersion]);
 
   const allEntries = useMemo(() => data?.sections.flatMap((section) => section.entries) ?? [], [data]);
+  const allSectionIds = useMemo(() => data?.sections.map((section) => section.id) ?? [], [data]);
+  const headlineValues = data?.profile.headline ?? [];
+  if (headlineIdsRef.current.length > headlineValues.length) headlineIdsRef.current = headlineIdsRef.current.slice(0, headlineValues.length);
+  while (headlineIdsRef.current.length < headlineValues.length) headlineIdsRef.current.push(id('headline'));
+  const profileHeadlineItems = useMemo(() => headlineItems(headlineValues, headlineIdsRef.current), [headlineValues]);
   const previewBuild = data?.builds.find((build) => build.id === previewBuildId && build.pdfPath) ?? null;
 
   if (!data) {
@@ -157,6 +248,22 @@ export default function BonCvApp() {
 
   function updateProfile(field: keyof AdminState['profile'], value: string | string[] | null) {
     mutate((draft) => { (draft.profile[field] as typeof value) = value; });
+  }
+
+  function moveHeadline(activeId: string, overId: string) {
+    const reorderedIds = reorderById(profileHeadlineItems.map((item) => item.id), activeId, overId);
+    const byId = new Map(profileHeadlineItems.map((item) => [item.id, item.value]));
+    headlineIdsRef.current = reorderedIds;
+    updateProfile('headline', reorderedIds.map((itemId) => byId.get(itemId) ?? ''));
+  }
+
+  function updateHeadline(index: number, value: string) {
+    mutate((draft) => { draft.profile.headline[index] = value; });
+  }
+
+  function removeHeadline(index: number) {
+    headlineIdsRef.current = headlineIdsRef.current.filter((_, itemIndex) => itemIndex !== index);
+    mutate((draft) => { draft.profile.headline = draft.profile.headline.filter((_, itemIndex) => itemIndex !== index); });
   }
 
   function updateEntry(sectionId: string, entryId: string, action: (entry: CvEntry) => void) {
@@ -208,25 +315,20 @@ export default function BonCvApp() {
     });
   }
 
-  function movePresetEntry(preset: ResumePreset, entryId: string, direction: -1 | 1) {
+  function movePresetEntry(preset: ResumePreset, activeId: string, overId: string) {
     updatePreset(preset.id, (draft) => {
-      const order = draft.entryOrder.filter((value) => draft.selectedEntryIds.includes(value));
-      const current = order.indexOf(entryId);
-      const target = current + direction;
-      if (current < 0 || target < 0 || target >= order.length) return;
-      [order[current], order[target]] = [order[target], order[current]];
-      draft.entryOrder = [...order, ...draft.entryOrder.filter((value) => !order.includes(value))];
+      const selected = new Set(draft.selectedEntryIds);
+      const fullOrder = completeOrder(allEntries.map((entry) => entry.id), draft.entryOrder);
+      const selectedOrder = fullOrder.filter((entryId) => selected.has(entryId));
+      const reordered = reorderById(selectedOrder, activeId, overId);
+      draft.entryOrder = [...reordered, ...fullOrder.filter((entryId) => !selected.has(entryId))];
     });
   }
 
-  function movePresetSection(preset: ResumePreset, sectionId: string, direction: -1 | 1) {
+  function movePresetSection(preset: ResumePreset, activeId: string, overId: string) {
     updatePreset(preset.id, (draft) => {
-      const order = [...draft.sectionOrder];
-      const current = order.indexOf(sectionId);
-      const target = current + direction;
-      if (current < 0 || target < 0 || target >= order.length) return;
-      [order[current], order[target]] = [order[target], order[current]];
-      draft.sectionOrder = order;
+      const sectionIds = completeOrder(allSectionIds, draft.sectionOrder);
+      draft.sectionOrder = reorderById(sectionIds, activeId, overId);
     });
   }
 
@@ -363,7 +465,24 @@ export default function BonCvApp() {
                 <TextField label="政治面貌" value={data.profile.politicalStatus} onChange={(value) => updateProfile('politicalStatus', value)} />
                 <TextField label="籍贯" value={data.profile.origin} onChange={(value) => updateProfile('origin', value)} />
               </div>
-              <label className="field"><span>求职状态（每行一条）</span><textarea value={data.profile.headline.join('\n')} onChange={(event) => updateProfile('headline', event.target.value.split('\n'))} /></label>
+              <div className="field headline-field">
+                <span>求职状态</span>
+                <SortableList
+                  items={profileHeadlineItems}
+                  getId={(item) => item.id}
+                  label="求职状态"
+                  className="headline-list"
+                  onMove={moveHeadline}
+                  renderItem={(item, index, handle) => (
+                    <div className="headline-row">
+                      {handle}
+                      <input aria-label={`求职状态 ${index + 1}`} value={item.value} onChange={(event) => updateHeadline(item.index, event.target.value)} />
+                      <button type="button" className="remove-headline" aria-label={`删除求职状态 ${index + 1}`} title="删除" onClick={() => removeHeadline(item.index)}><Trash2 size={14} /></button>
+                    </div>
+                  )}
+                />
+                <button type="button" className="headline-add" disabled={data.profile.headline.length >= 12} onClick={() => updateProfile('headline', [...data.profile.headline, ''])}><Plus size={14} />添加一条求职状态</button>
+              </div>
             </section>
 
             {[...data.sections].sort((a, b) => a.order - b.order).map((section) => (
@@ -422,17 +541,33 @@ export default function BonCvApp() {
                   const checked = preset.profileFields.includes(field);
                   return <label className={`choice-chip ${checked ? 'selected' : ''}`} key={field}><input type="checkbox" checked={checked} onChange={() => updatePreset(preset.id, (item) => { item.profileFields = checked ? item.profileFields.filter((value) => value !== field) : [...item.profileFields, field]; item.includePhoto = field === 'photo' ? !checked : item.includePhoto; })} />{checked && <Check size={13} />}{profileFieldLabels[field]}</label>;
                 })}</div></div>
-                <div className="subsection"><h3>章节顺序</h3><div className="selection-list">
-                  {[...data.sections].sort((a, b) => (preset.sectionOrder.indexOf(a.id) < 0 ? 999 : preset.sectionOrder.indexOf(a.id)) - (preset.sectionOrder.indexOf(b.id) < 0 ? 999 : preset.sectionOrder.indexOf(b.id))).map((section) => (
-                    <div className="selection-row" key={section.id}><span><strong>{section.title}</strong><small>{section.entries.length} 段经历</small></span><div className="order-buttons"><button aria-label="章节上移" onClick={() => movePresetSection(preset, section.id, -1)}><ArrowUp size={14} /></button><button aria-label="章节下移" onClick={() => movePresetSection(preset, section.id, 1)}><ArrowDown size={14} /></button></div></div>
-                  ))}
-                </div></div>
-                <div className="subsection"><h3>经历与顺序 <span>{preset.selectedEntryIds.length}/{allEntries.length}</span></h3><div className="selection-list">
-                  {[...allEntries].sort((a, b) => preset.entryOrder.indexOf(a.id) - preset.entryOrder.indexOf(b.id)).map((entry) => {
-                    const checked = preset.selectedEntryIds.includes(entry.id);
-                    return <div className={`selection-row ${checked ? '' : 'muted-row'}`} key={entry.id}><label><input type="checkbox" checked={checked} onChange={() => updatePreset(preset.id, (item) => { item.selectedEntryIds = checked ? item.selectedEntryIds.filter((value) => value !== entry.id) : [...item.selectedEntryIds, entry.id]; if (!item.entryOrder.includes(entry.id)) item.entryOrder.push(entry.id); })} /><span><strong>{entry.title}</strong><small>{data.sections.find((section) => section.id === entry.sectionId)?.title}</small></span></label>{checked && <div className="order-buttons"><button aria-label="上移" onClick={() => movePresetEntry(preset, entry.id, -1)}><ArrowUp size={14} /></button><button aria-label="下移" onClick={() => movePresetEntry(preset, entry.id, 1)}><ArrowDown size={14} /></button></div>}</div>;
-                  })}
-                </div></div>
+                <div className="subsection"><h3>章节顺序</h3>
+                  <SortableList
+                    items={orderedItems(data.sections, preset.sectionOrder)}
+                    getId={(section) => section.id}
+                    label="章节"
+                    className="selection-list"
+                    onMove={(activeId, overId) => movePresetSection(preset, activeId, overId)}
+                    renderItem={(section, _index, handle) => (
+                      <div className="selection-row"><span><strong>{section.title}</strong><small>{section.entries.length} 段经历</small></span>{handle}</div>
+                    )}
+                  />
+                </div>
+                <div className="subsection"><h3>经历与顺序 <span>{preset.selectedEntryIds.length}/{allEntries.length}</span></h3>
+                  <SortableList
+                    items={orderedItems(allEntries, preset.entryOrder)}
+                    getId={(entry) => entry.id}
+                    label="经历"
+                    className="selection-list"
+                    onMove={(activeId, overId) => {
+                      if (preset.selectedEntryIds.includes(activeId) && preset.selectedEntryIds.includes(overId)) movePresetEntry(preset, activeId, overId);
+                    }}
+                    renderItem={(entry, _index, handle) => {
+                      const checked = preset.selectedEntryIds.includes(entry.id);
+                      return <div className={`selection-row ${checked ? '' : 'muted-row'}`}><label><input type="checkbox" checked={checked} onChange={() => updatePreset(preset.id, (item) => { item.selectedEntryIds = checked ? item.selectedEntryIds.filter((value) => value !== entry.id) : [...item.selectedEntryIds, entry.id]; if (!item.entryOrder.includes(entry.id)) item.entryOrder.push(entry.id); })} /><span><strong>{entry.title}</strong><small>{data.sections.find((section) => section.id === entry.sectionId)?.title}</small></span></label>{checked && handle}</div>;
+                    }}
+                  />
+                </div>
               </section>
             ))}
           </div>

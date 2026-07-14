@@ -31,4 +31,13 @@ describe('TeX rendering', () => {
     expect(tex).toContain('includegraphics[width=25mm,height=30mm,keepaspectratio]{photo.png}');
     expect(tex).not.toContain(demoState.profile.email);
   });
+
+  it('renders legacy middle-dot headlines as separate lines', () => {
+    const state = structuredClone(demoState);
+    state.profile.headline = ['长期实习 · 每周到岗 4-5 天'];
+    const tex = renderResumeTex(state, state.presets[0]);
+    expect(tex).toContain(String.raw`\textbf{长期实习}}\\`);
+    expect(tex).toContain(String.raw`\textbf{每周到岗 4-5 天}}\\`);
+    expect(tex).not.toContain('长期实习 · 每周到岗');
+  });
 });
