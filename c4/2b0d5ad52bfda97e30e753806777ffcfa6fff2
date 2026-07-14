@@ -1,0 +1,21 @@
+scripts/fetch-tectonic.mjs
+  s_02419d73a9345a::t_f7850493895ed1 7,13,44,48-63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "c42b0d5ad52bfda97e30e753806777ffcfa6fff2",
+  "prompts": {},
+  "sessions": {
+    "s_02419d73a9345a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f5f3a-b283-7231-a861-9494f8612841",
+        "model": "unknown"
+      },
+      "human_author": "yxylovecoding <yangxy1229@163.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
