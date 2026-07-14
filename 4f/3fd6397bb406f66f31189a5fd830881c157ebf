@@ -1,0 +1,21 @@
+.gitignore
+  s_02419d73a9345a::t_316f9236287af9 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "4f3fd6397bb406f66f31189a5fd830881c157ebf",
+  "prompts": {},
+  "sessions": {
+    "s_02419d73a9345a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f5f3a-b283-7231-a861-9494f8612841",
+        "model": "unknown"
+      },
+      "human_author": "yxylovecoding <yangxy1229@163.com>"
+    }
+  },
+  "attestation_metadata": {},
+  "remote_transcripts": {}
+}
