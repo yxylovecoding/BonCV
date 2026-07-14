@@ -33,13 +33,23 @@ function renderEntry(entry: CvEntry) {
   return `${entryHeading(entry)}\n${summary}\n${bullets}`;
 }
 
+export function entryForPreset(entry: CvEntry, preset: ResumePreset): CvEntry {
+  const override = preset.entryOverrides?.[entry.id];
+  if (!override) return entry;
+  return {
+    ...entry,
+    ...override,
+    highlights: override.highlights ?? entry.highlights,
+  };
+}
+
 export function renderResumeTex(state: BonCvState, preset: ResumePreset, photoFilename?: string) {
   const fields = new Set(preset.profileFields);
   const selected = new Set(preset.selectedEntryIds);
   const order = new Map(preset.entryOrder.map((entryId, index) => [entryId, index]));
   const sectionOrder = new Map(preset.sectionOrder.map((sectionId, index) => [sectionId, index]));
   const sections = state.sections
-    .map((section) => ({ ...section, entries: section.entries.filter((entry) => selected.has(entry.id)).sort((a, b) => (order.get(a.id) ?? 999) - (order.get(b.id) ?? 999)) }))
+    .map((section) => ({ ...section, entries: section.entries.filter((entry) => selected.has(entry.id)).map((entry) => entryForPreset(entry, preset)).sort((a, b) => (order.get(a.id) ?? 999) - (order.get(b.id) ?? 999)) }))
     .filter((section) => section.entries.length)
     .sort((a, b) => (sectionOrder.get(a.id) ?? a.order) - (sectionOrder.get(b.id) ?? b.order));
   const contactParts = [

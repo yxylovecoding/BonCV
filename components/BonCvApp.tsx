@@ -2,14 +2,15 @@
 
 import {
   Archive, BookOpen, Check, ChevronRight, CircleAlert, Copy, Download, ExternalLink, Eye,
-  FileCode2, FileText, GripVertical, KeyRound, Link2, LoaderCircle, LogOut, Plus, RefreshCw,
-  Save, Settings2, ShieldCheck, Sparkles, Trash2, UserRound, X,
+  FileCode2, FileText, GripVertical, KeyRound, Layers, Link2, LoaderCircle, LogOut, Plus,
+  RefreshCw, RotateCcw, Save, Settings2, ShieldCheck, Sparkles, Trash2, UserRound, X,
 } from 'lucide-react';
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { groupBuildsByPreset } from '@/lib/builds';
 import { completeOrder, reorderById } from '@/lib/order';
 import type {
-  AdminState, CvEntry, CvSection, ProfileField, ResumePreset, SectionKind,
+  AdminState, CvEntry, CvSection, ProfileField, ResumeEntryOverride, ResumePreset, SectionKind,
 } from '@/lib/types';
 
 type Tab = 'content' | 'presets' | 'builds' | 'keys';
@@ -25,15 +26,15 @@ const sectionKindLabels: Record<SectionKind, string> = {
 
 const navItems: Array<{ id: Tab; label: string; icon: typeof UserRound }> = [
   { id: 'content', label: '内容', icon: BookOpen },
-  { id: 'presets', label: '方案', icon: Settings2 },
+  { id: 'presets', label: '方向', icon: Settings2 },
   { id: 'builds', label: '生成', icon: FileText },
   { id: 'keys', label: '连接', icon: Link2 },
 ];
 
 const tabMeta: Record<Tab, { eyebrow: string; title: string; description: string }> = {
   content: { eyebrow: 'CONTENT LIBRARY', title: '内容库', description: '维护基本信息与经历，修改后自动保存。' },
-  presets: { eyebrow: 'RESUME PRESETS', title: '简历方案', description: '选择字段与经历，调整输出顺序。' },
-  builds: { eyebrow: 'EXPORT HISTORY', title: '生成记录', description: '预览或下载已生成的 TeX 与 PDF 文件。' },
+  presets: { eyebrow: 'JD DIRECTIONS', title: 'JD 方向', description: '复用通用内容，并为不同岗位定制项目表达。' },
+  builds: { eyebrow: 'ITERATION HISTORY', title: '生成记录', description: '按 JD 方向查看和迭代已生成的简历。' },
   keys: { eyebrow: 'INTEGRATIONS', title: '连接密钥', description: '管理 BonBills FIRE 的只读连接。' },
 };
 
@@ -156,6 +157,7 @@ export default function BonCvApp() {
   const [keyLabel, setKeyLabel] = useState('BonBills FIRE');
   const [busyPreset, setBusyPreset] = useState<string | null>(null);
   const [previewBuildId, setPreviewBuildId] = useState<string | null>(null);
+  const [expandedOverrideKey, setExpandedOverrideKey] = useState<string | null>(null);
   const headlineIdsRef = useRef<string[]>([]);
 
   const load = useCallback(async () => {
@@ -233,6 +235,7 @@ export default function BonCvApp() {
   if (headlineIdsRef.current.length > headlineValues.length) headlineIdsRef.current = headlineIdsRef.current.slice(0, headlineValues.length);
   while (headlineIdsRef.current.length < headlineValues.length) headlineIdsRef.current.push(id('headline'));
   const profileHeadlineItems = useMemo(() => headlineItems(headlineValues, headlineIdsRef.current), [headlineValues]);
+  const buildGroups = useMemo(() => groupBuildsByPreset(data?.builds ?? []), [data?.builds]);
   const previewBuild = data?.builds.find((build) => build.id === previewBuildId && build.pdfPath) ?? null;
 
   if (!data) {
@@ -289,6 +292,7 @@ export default function BonCvApp() {
       draft.presets.forEach((preset) => {
         preset.selectedEntryIds = preset.selectedEntryIds.filter((idValue) => idValue !== entryId);
         preset.entryOrder = preset.entryOrder.filter((idValue) => idValue !== entryId);
+        delete preset.entryOverrides[entryId];
       });
     });
   }
@@ -301,9 +305,10 @@ export default function BonCvApp() {
   function createPreset() {
     const now = new Date().toISOString();
     mutate((draft) => draft.presets.push({
-      id: id('preset'), name: `简历方案 ${draft.presets.length + 1}`,
+      id: id('preset'), name: `JD 方向 ${draft.presets.length + 1}`,
       profileFields: ['headline', 'phone', 'email'], selectedEntryIds: allEntries.map((entry) => entry.id),
       sectionOrder: draft.sections.map((section) => section.id), entryOrder: allEntries.map((entry) => entry.id),
+      entryOverrides: {},
       includePhoto: false, createdAt: now, updatedAt: now,
     }));
   }
@@ -313,6 +318,30 @@ export default function BonCvApp() {
       const preset = draft.presets.find((item) => item.id === presetId);
       if (preset) { action(preset); preset.updatedAt = new Date().toISOString(); }
     });
+  }
+
+  function enableEntryOverride(preset: ResumePreset, entry: CvEntry) {
+    updatePreset(preset.id, (draft) => {
+      draft.entryOverrides[entry.id] = {
+        title: entry.title,
+        role: entry.role,
+        summary: entry.summary,
+        highlights: [...entry.highlights],
+      };
+    });
+    setExpandedOverrideKey(`${preset.id}:${entry.id}`);
+  }
+
+  function updateEntryOverride(presetId: string, entryId: string, action: (override: ResumeEntryOverride) => void) {
+    updatePreset(presetId, (draft) => {
+      const override = draft.entryOverrides[entryId];
+      if (override) action(override);
+    });
+  }
+
+  function resetEntryOverride(presetId: string, entryId: string) {
+    updatePreset(presetId, (draft) => { delete draft.entryOverrides[entryId]; });
+    setExpandedOverrideKey((current) => current === `${presetId}:${entryId}` ? null : current);
   }
 
   function movePresetEntry(preset: ResumePreset, activeId: string, overId: string) {
@@ -407,7 +436,7 @@ export default function BonCvApp() {
           <p>职业内容库</p>
           <strong>{allEntries.length}</strong>
           <span>段经历可自由组合</span>
-          <div><span><b>{data.presets.length}</b> 套方案</span><span><b>{data.builds.length}</b> 次生成</span></div>
+          <div><span><b>{data.presets.length}</b> 个方向</span><span><b>{data.builds.length}</b> 次迭代</span></div>
         </div>
         <div className="sidebar-status"><StatusPill state={saveState} /><span>Revision {data.revision}</span></div>
       </aside>
@@ -426,8 +455,8 @@ export default function BonCvApp() {
               <strong>{allEntries.length}</strong>
               <span>段经历可自由组合</span>
             </div>
-            <div className="hero-stat"><span>{data.presets.length}</span>套方案</div>
-            <div className="hero-stat"><span>{data.builds.length}</span>次生成</div>
+            <div className="hero-stat"><span>{data.presets.length}</span>个方向</div>
+            <div className="hero-stat"><span>{data.builds.length}</span>次迭代</div>
           </div>
         </header>
 
@@ -440,7 +469,7 @@ export default function BonCvApp() {
           <div className="workspace-actions">
             <span className="session-label"><ShieldCheck size={15} />安全会话</span>
             <StatusPill state={saveState} />
-            {tab === 'presets' && <button className="primary-button compact" onClick={createPreset}><Plus size={16} />新方案</button>}
+            {tab === 'presets' && <button className="primary-button compact" onClick={createPreset}><Plus size={16} />新方向</button>}
             <button className="logout-button" onClick={logout}><LogOut size={15} />退出登录</button>
           </div>
         </header>
@@ -529,12 +558,12 @@ export default function BonCvApp() {
 
         {tab === 'presets' && (
           <div className="stack presets-workspace">
-            <div className="section-intro mobile-section-intro"><div><p className="eyebrow">COMPOSITIONS</p><h2>简历方案</h2><p>为不同岗位保留不同的内容组合。</p></div><button className="primary-button compact" onClick={createPreset}><Plus size={16} />新方案</button></div>
+            <div className="section-intro mobile-section-intro"><div><p className="eyebrow">JD DIRECTIONS</p><h2>JD 方向</h2><p>通用内容只维护一次，项目表达可按岗位定制。</p></div><button className="primary-button compact" onClick={createPreset}><Plus size={16} />新方向</button></div>
             {data.presets.map((preset) => (
               <section className="panel preset-card" key={preset.id}>
                 <div className="panel-heading">
                   <input className="preset-name" value={preset.name} onChange={(event) => updatePreset(preset.id, (item) => { item.name = event.target.value; })} />
-                  <button className="icon-danger" aria-label="删除方案" title="删除方案" onClick={() => removePreset(preset.id)}><Trash2 size={16} /></button>
+                  <button className="icon-danger" aria-label="删除方向" title="删除方向" onClick={() => removePreset(preset.id)}><Trash2 size={16} /></button>
                   <button className="generate-button" disabled={busyPreset === preset.id} onClick={() => buildPreset(preset.id)}>{busyPreset === preset.id ? <LoaderCircle size={16} className="spin" /> : <Sparkles size={16} />}生成</button>
                 </div>
                 <div className="subsection"><h3>基本字段</h3><div className="chip-grid">{(Object.keys(profileFieldLabels) as ProfileField[]).map((field) => {
@@ -564,7 +593,29 @@ export default function BonCvApp() {
                     }}
                     renderItem={(entry, _index, handle) => {
                       const checked = preset.selectedEntryIds.includes(entry.id);
-                      return <div className={`selection-row ${checked ? '' : 'muted-row'}`}><label><input type="checkbox" checked={checked} onChange={() => updatePreset(preset.id, (item) => { item.selectedEntryIds = checked ? item.selectedEntryIds.filter((value) => value !== entry.id) : [...item.selectedEntryIds, entry.id]; if (!item.entryOrder.includes(entry.id)) item.entryOrder.push(entry.id); })} /><span><strong>{entry.title}</strong><small>{data.sections.find((section) => section.id === entry.sectionId)?.title}</small></span></label>{checked && handle}</div>;
+                      const override = preset.entryOverrides[entry.id];
+                      const overrideKey = `${preset.id}:${entry.id}`;
+                      const expanded = expandedOverrideKey === overrideKey;
+                      return (
+                        <div className="entry-version-block">
+                          <div className={`selection-row entry-selection-row ${checked ? '' : 'muted-row'}`}>
+                            <label><input type="checkbox" checked={checked} onChange={() => updatePreset(preset.id, (item) => { item.selectedEntryIds = checked ? item.selectedEntryIds.filter((value) => value !== entry.id) : [...item.selectedEntryIds, entry.id]; if (!item.entryOrder.includes(entry.id)) item.entryOrder.push(entry.id); })} /><span><strong>{entry.title}</strong><small>{data.sections.find((section) => section.id === entry.sectionId)?.title}</small></span></label>
+                            {checked && <button type="button" className={`entry-version-button ${override ? 'customized' : ''}`} aria-expanded={override ? expanded : undefined} onClick={() => override ? setExpandedOverrideKey(expanded ? null : overrideKey) : enableEntryOverride(preset, entry)}>{override ? <Sparkles size={12} /> : <Layers size={12} />}{override ? 'JD 专属' : '通用'}</button>}
+                            {checked && handle}
+                          </div>
+                          {checked && override && expanded && (
+                            <div className="entry-override-editor">
+                              <div className="override-heading"><div><strong>{preset.name} · 专属版本</strong><span>组织、时间等信息继续继承内容库。</span></div><button type="button" onClick={() => resetEntryOverride(preset.id, entry.id)}><RotateCcw size={13} />恢复通用</button></div>
+                              <div className="override-grid">
+                                <label className="field"><span>JD 专属标题</span><input value={override.title ?? entry.title} onChange={(event) => updateEntryOverride(preset.id, entry.id, (item) => { item.title = event.target.value; })} /></label>
+                                <label className="field"><span>JD 专属角色/定位</span><input value={override.role ?? entry.role} onChange={(event) => updateEntryOverride(preset.id, entry.id, (item) => { item.role = event.target.value; })} /></label>
+                              </div>
+                              <label className="field"><span>JD 专属简介</span><textarea value={override.summary ?? entry.summary} onChange={(event) => updateEntryOverride(preset.id, entry.id, (item) => { item.summary = event.target.value; })} /></label>
+                              <label className="field"><span>JD 专属要点（每行一条）</span><textarea value={(override.highlights ?? entry.highlights).join('\n')} onChange={(event) => updateEntryOverride(preset.id, entry.id, (item) => { item.highlights = event.target.value.split('\n').filter(Boolean); })} /></label>
+                            </div>
+                          )}
+                        </div>
+                      );
                     }}
                   />
                 </div>
@@ -575,18 +626,28 @@ export default function BonCvApp() {
 
         {tab === 'builds' && (
           <div className="stack builds-workspace">
-            <div className="section-intro mobile-section-intro"><div><p className="eyebrow">EXPORTS</p><h2>生成记录</h2><p>每个方案保留最近 20 次输出。</p></div><Archive size={24} /></div>
-            {data.builds.length === 0 ? <div className="empty-state"><FileText size={34} /><h3>还没有生成记录</h3><p>前往“方案”，选择内容后生成第一份简历。</p><button className="soft-button" onClick={() => setTab('presets')}>选择方案</button></div> : data.builds.map((build) => (
-              <article className="build-card" key={build.id}>
-                <div className={`file-icon ${build.status}`}><FileText size={21} /></div>
-                <div className="build-info"><strong>{build.presetName}</strong><span>{formatTime(build.createdAt)} · {build.status === 'ready' ? `${build.pageCount ?? '—'} 页 PDF` : 'TeX 已生成'}</span></div>
-                <div className="download-group">
-                  <a href={`/api/files/${build.id}/tex`} aria-label={`下载 ${build.presetName} 的 TeX`} title="下载 TeX"><FileCode2 size={17} /></a>
-                  {build.pdfPath && <button type="button" aria-label={`预览 ${build.presetName} 的 PDF`} title="预览 PDF" onClick={() => setPreviewBuildId(build.id)}><Eye size={17} /></button>}
-                  {build.pdfPath && <a href={`/api/files/${build.id}/pdf`} aria-label={`下载 ${build.presetName} 的 PDF`} title="下载 PDF"><Download size={17} /></a>}
-                </div>
-              </article>
-            ))}
+            <div className="section-intro mobile-section-intro"><div><p className="eyebrow">ITERATIONS</p><h2>生成记录</h2><p>按 JD 方向归档，每个方向保留最近 20 次迭代。</p></div><Archive size={24} /></div>
+            {data.builds.length === 0 ? <div className="empty-state"><FileText size={34} /><h3>还没有生成记录</h3><p>先创建一个 JD 方向，选择内容并生成第一版简历。</p><button className="soft-button" onClick={() => setTab('presets')}>选择 JD 方向</button></div> : buildGroups.map((group) => {
+              const directionName = data.presets.find((preset) => preset.id === group.presetId)?.name ?? group.presetName;
+              return (
+                <section className="build-group" key={group.presetId}>
+                  <header className="build-group-heading"><div><span className="build-direction-icon"><Layers size={17} /></span><div><p className="eyebrow">JD DIRECTION</p><h3>{directionName}</h3></div></div><span>{group.builds.length} 次迭代</span></header>
+                  <div className="build-iterations">
+                    {group.builds.map((build) => (
+                      <article className="build-card" key={build.id}>
+                        <div className={`file-icon ${build.status}`}><FileText size={21} /></div>
+                        <div className="build-info"><strong>第 {build.iteration} 版</strong><span>{formatTime(build.createdAt)} · {build.status === 'ready' ? `${build.pageCount ?? '—'} 页 PDF` : 'TeX 已生成'}</span></div>
+                        <div className="download-group">
+                          <a href={`/api/files/${build.id}/tex`} aria-label={`下载 ${directionName} 第 ${build.iteration} 版 TeX`} title="下载 TeX"><FileCode2 size={17} /></a>
+                          {build.pdfPath && <button type="button" aria-label={`预览 ${directionName} 第 ${build.iteration} 版 PDF`} title="预览 PDF" onClick={() => setPreviewBuildId(build.id)}><Eye size={17} /></button>}
+                          {build.pdfPath && <a href={`/api/files/${build.id}/pdf`} aria-label={`下载 ${directionName} 第 ${build.iteration} 版 PDF`} title="下载 PDF"><Download size={17} /></a>}
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
           </div>
         )}
 

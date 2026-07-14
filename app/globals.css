@@ -117,6 +117,16 @@ button { color: inherit; }
 .selection-row strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
 .selection-row small { color: var(--muted); font-size: 9px; }
 .muted-row { opacity: .54; }
+.entry-version-block { display: grid; gap: 6px; }
+.entry-version-button { min-height: 30px; padding: 0 8px; flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; border: 1px solid #ded4df; border-radius: 9px; color: #756a77; background: #faf8fa; cursor: pointer; font-size: 9px; font-weight: 750; white-space: nowrap; }
+.entry-version-button.customized { color: var(--accent); border-color: #d4b7d8; background: var(--accent-soft); }
+.entry-override-editor { padding: 12px; border: 1px solid #d9c4dc; border-radius: 12px; background: #fcf7fc; }
+.override-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.override-heading > div { min-width: 0; display: grid; gap: 3px; }
+.override-heading strong { font-size: 11px; }
+.override-heading span { color: var(--muted); font-size: 9px; }
+.override-heading button { min-height: 30px; padding: 0 8px; flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; border: 1px solid #e6cdd2; border-radius: 8px; color: var(--red); background: #fff8f9; cursor: pointer; font-size: 9px; font-weight: 700; }
+.override-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
 .download-group a, .download-group button { width: 30px; height: 30px; padding: 0; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 9px; color: var(--muted); background: #faf8fa; cursor: pointer; }
 .icon-danger { width: 34px; height: 34px; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid #f1dfe3; border-radius: 10px; color: #b42345; background: #fff7f8; cursor: pointer; }
 
@@ -124,6 +134,13 @@ button { color: inherit; }
 .empty-state svg { color: #a176a7; }
 .empty-state h3 { margin: 13px 0 5px; font: 700 18px/1.2 Georgia, serif; }
 .empty-state p { max-width: 250px; margin: 0 0 16px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.build-group { padding: 14px; display: grid; gap: 10px; border: 1px solid var(--line); border-radius: 17px; background: rgba(255,253,249,.94); box-shadow: var(--shadow); }
+.build-group-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.build-group-heading > div { min-width: 0; display: flex; align-items: center; gap: 9px; }
+.build-group-heading h3 { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 16px/1.2 Georgia, "Times New Roman", serif; }
+.build-group-heading > span { padding: 5px 8px; flex: 0 0 auto; border-radius: 999px; color: var(--accent); background: var(--accent-soft); font-size: 9px; font-weight: 750; }
+.build-direction-icon { width: 34px; height: 34px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 10px; color: white; background: var(--accent); }
+.build-iterations { display: grid; gap: 7px; }
 .build-card { min-height: 72px; padding: 12px; display: flex; align-items: center; gap: 11px; border: 1px solid var(--line); border-radius: 17px; background: var(--paper); box-shadow: var(--shadow); }
 .file-icon { width: 42px; height: 46px; display: grid; place-items: center; border-radius: 12px; color: var(--accent); background: var(--accent-soft); }
 .file-icon.failed { color: var(--red); background: #fff0f2; }
@@ -179,6 +196,9 @@ button { color: inherit; }
 
 @media (max-width: 460px) {
   .form-grid { grid-template-columns: 1fr; gap: 0; }
+  .override-grid { grid-template-columns: 1fr; gap: 0; }
+  .entry-selection-row { padding-left: 8px; }
+  .entry-version-button { padding: 0 6px; }
   .topbar { padding-top: 18px; }
   .hero-card { min-height: 132px; }
   .panel { padding: 15px; border-radius: 19px; }
@@ -193,7 +213,7 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
   .primary-button:hover, .generate-button:hover { background: #7a1887; }
   .soft-button:hover, .choice-chip:hover { background: #ead8ed; }
   .entry-editor:hover, .selection-row:hover, .build-card:hover { border-color: #cdbdce; }
-  .drag-handle:hover, .remove-headline:hover, .download-group a:hover, .download-group button:hover, .pdf-preview-actions a:hover, .pdf-preview-actions button:hover { color: var(--accent); border-color: #cda9d1; background: var(--accent-soft); }
+  .drag-handle:hover, .remove-headline:hover, .entry-version-button:hover, .download-group a:hover, .download-group button:hover, .pdf-preview-actions a:hover, .pdf-preview-actions button:hover { color: var(--accent); border-color: #cda9d1; background: var(--accent-soft); }
   .danger-link:hover { color: #8e1736; }
 }
 

@@ -39,6 +39,13 @@ const sectionSchema = z.object({
   entries: z.array(entrySchema).max(120),
 }).strict();
 
+const entryOverrideSchema = z.object({
+  title: shortText.optional(),
+  role: shortText.optional(),
+  summary: longText.optional(),
+  highlights: z.array(longText).max(80).optional(),
+}).strict();
+
 const presetSchema = z.object({
   id,
   name: shortText,
@@ -46,6 +53,7 @@ const presetSchema = z.object({
   selectedEntryIds: z.array(id).max(500),
   sectionOrder: z.array(id).max(120),
   entryOrder: z.array(id).max(500),
+  entryOverrides: z.record(id, entryOverrideSchema).default({}),
   includePhoto: z.boolean(),
   createdAt: shortText,
   updatedAt: shortText,

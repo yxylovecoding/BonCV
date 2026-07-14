@@ -3,7 +3,7 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { demoState } from './fixtures';
 import { normalizeHeadlineItems } from './profile';
-import type { AdminState, BonCvState, IntegrationKey } from './types';
+import type { AdminState, BonCvState, IntegrationKey, ResumeBuild } from './types';
 
 const STATE_KEY = 'boncv:state:v1';
 const LOCAL_STATE_PATH = path.join(process.cwd(), 'private', 'boncv.json');
@@ -32,9 +32,19 @@ async function writeLocal(state: BonCvState) {
 }
 
 function normalizeState(state: BonCvState): BonCvState {
+  const iterationByBuild = new Map<string, number>();
+  const latestIteration = new Map<string, number>();
+  [...state.builds].reverse().forEach((build) => {
+    const previous = latestIteration.get(build.presetId) ?? 0;
+    const iteration = build.iteration ?? previous + 1;
+    latestIteration.set(build.presetId, Math.max(previous, iteration));
+    iterationByBuild.set(build.id, iteration);
+  });
   return {
     ...state,
     profile: { ...state.profile, headline: normalizeHeadlineItems(state.profile.headline) },
+    presets: state.presets.map((preset) => ({ ...preset, entryOverrides: preset.entryOverrides ?? {} })),
+    builds: state.builds.map((build): ResumeBuild => ({ ...build, iteration: iterationByBuild.get(build.id) ?? 1 })),
   };
 }
 

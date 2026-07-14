@@ -40,4 +40,19 @@ describe('TeX rendering', () => {
     expect(tex).toContain(String.raw`\textbf{每周到岗 4-5 天}}\\`);
     expect(tex).not.toContain('长期实习 · 每周到岗');
   });
+
+  it('uses the JD-specific entry version without changing shared content', () => {
+    const state = structuredClone(demoState);
+    const preset = state.presets[0];
+    preset.entryOverrides['research-edge-llm'] = {
+      title: '面向大模型应用的边缘部署',
+      summary: '突出与目标 JD 相关的模型部署能力。',
+      highlights: ['针对 JD 重写的项目要点'],
+    };
+    const tex = renderResumeTex(state, preset);
+    expect(tex).toContain('面向大模型应用的边缘部署');
+    expect(tex).toContain('针对 JD 重写的项目要点');
+    expect(tex).not.toContain('搭建端侧低延迟自然语言处理流水线');
+    expect(state.sections[1].entries[0].title).toBe('边缘侧私有化 LLM 部署实践');
+  });
 });

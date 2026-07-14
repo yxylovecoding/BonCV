@@ -54,6 +54,7 @@ export const demoState: BonCvState = {
     selectedEntryIds: ['edu-master', 'edu-bachelor', 'research-edge-llm', 'skills-main'],
     sectionOrder: ['education', 'research', 'skills'],
     entryOrder: ['edu-master', 'edu-bachelor', 'research-edge-llm', 'skills-main'],
+    entryOverrides: {},
     includePhoto: false, createdAt: now, updatedAt: now,
   }],
   builds: [],

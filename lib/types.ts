@@ -38,6 +38,13 @@ export interface CvSection {
   entries: CvEntry[];
 }
 
+export interface ResumeEntryOverride {
+  title?: string;
+  role?: string;
+  summary?: string;
+  highlights?: string[];
+}
+
 export interface ResumePreset {
   id: string;
   name: string;
@@ -45,6 +52,7 @@ export interface ResumePreset {
   selectedEntryIds: string[];
   sectionOrder: string[];
   entryOrder: string[];
+  entryOverrides: Record<string, ResumeEntryOverride>;
   includePhoto: boolean;
   createdAt: string;
   updatedAt: string;
@@ -54,6 +62,7 @@ export interface ResumeBuild {
   id: string;
   presetId: string;
   presetName: string;
+  iteration: number;
   contentHash: string;
   createdAt: string;
   texPath: string;

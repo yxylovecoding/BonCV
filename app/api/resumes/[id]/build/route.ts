@@ -28,6 +28,7 @@ export async function POST(_: Request, context: { params: Promise<{ id: string }
   if (cached) return NextResponse.json({ cached: true, build: cached, state: toAdminState(state) });
 
   const buildId = crypto.randomUUID();
+  const iteration = state.builds.filter((build) => build.presetId === id).reduce((latest, build) => Math.max(latest, build.iteration ?? 0), 0) + 1;
   const slug = preset.name.replace(/[^a-zA-Z0-9\u4e00-\u9fff]+/g, '-').replace(/^-|-$/g, '') || 'resume';
   const stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 13);
   const base = `builds/${slug}-${stamp}-${hash.slice(0, 8)}`;
@@ -39,9 +40,9 @@ export async function POST(_: Request, context: { params: Promise<{ id: string }
       throw new Error('PDF 存在文本溢出，请缩短内容后重试');
     }
     const pdfPath = await saveArtifact(`${base}.pdf`, result.pdf, 'application/pdf');
-    build = { id: buildId, presetId: id, presetName: preset.name, contentHash: hash, createdAt: new Date().toISOString(), texPath, pdfPath, pageCount: result.pageCount, status: 'ready' };
+    build = { id: buildId, presetId: id, presetName: preset.name, iteration, contentHash: hash, createdAt: new Date().toISOString(), texPath, pdfPath, pageCount: result.pageCount, status: 'ready' };
   } catch (error) {
-    build = { id: buildId, presetId: id, presetName: preset.name, contentHash: hash, createdAt: new Date().toISOString(), texPath, pdfPath: null, pageCount: null, status: 'tex_only', error: error instanceof Error ? error.message : String(error) };
+    build = { id: buildId, presetId: id, presetName: preset.name, iteration, contentHash: hash, createdAt: new Date().toISOString(), texPath, pdfPath: null, pageCount: null, status: 'tex_only', error: error instanceof Error ? error.message : String(error) };
   }
   const next = await updateState((current) => {
     current.builds.unshift(build);

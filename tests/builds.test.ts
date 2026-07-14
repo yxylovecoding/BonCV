@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { keepRecentBuilds } from '@/lib/builds';
+import { groupBuildsByPreset, keepRecentBuilds } from '@/lib/builds';
 import type { ResumeBuild } from '@/lib/types';
 
 function build(presetId: string, index: number): ResumeBuild {
@@ -7,6 +7,7 @@ function build(presetId: string, index: number): ResumeBuild {
     id: `${presetId}-${index}`,
     presetId,
     presetName: presetId,
+    iteration: index + 1,
     contentHash: String(index),
     createdAt: new Date(2026, 0, index + 1).toISOString(),
     texPath: `local:${index}.tex`,
@@ -23,5 +24,11 @@ describe('resume build retention', () => {
     expect(result.filter((item) => item.presetId === 'a')).toHaveLength(20);
     expect(result.filter((item) => item.presetId === 'b')).toHaveLength(20);
     expect(result[0].id).toBe('a-0');
+  });
+
+  it('groups iterations by JD direction while preserving newest-first order', () => {
+    const groups = groupBuildsByPreset([build('ai', 3), build('backend', 2), build('ai', 1)]);
+    expect(groups.map((group) => group.presetId)).toEqual(['ai', 'backend']);
+    expect(groups[0].builds.map((item) => item.id)).toEqual(['ai-3', 'ai-1']);
   });
 });
