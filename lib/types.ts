@@ -69,6 +69,7 @@ export interface ResumeBuild {
   pdfPath: string | null;
   pageCount: number | null;
   status: 'ready' | 'tex_only' | 'failed';
+  warning?: string;
   error?: string;
 }
 

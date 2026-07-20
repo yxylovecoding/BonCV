@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireSession } from '@/lib/auth';
-import { compileTex } from '@/lib/compiler';
+import { compileTex, pdfLayoutWarning } from '@/lib/compiler';
 import { readArtifact, saveArtifact } from '@/lib/artifacts';
 import { keepRecentBuilds } from '@/lib/builds';
 import { getState, toAdminState, updateState } from '@/lib/state';
@@ -32,22 +32,27 @@ export async function POST(_: Request, context: { params: Promise<{ id: string }
   const slug = preset.name.replace(/[^a-zA-Z0-9\u4e00-\u9fff]+/g, '-').replace(/^-|-$/g, '') || 'resume';
   const stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 13);
   const base = `builds/${slug}-${stamp}-${hash.slice(0, 8)}`;
-  const texPath = await saveArtifact(`${base}.tex`, tex, 'application/x-tex; charset=utf-8');
-  let build: ResumeBuild;
+  let result: Awaited<ReturnType<typeof compileTex>>;
   try {
-    const result = await compileTex(tex, photo);
-    if (/Overfull \\hbox \((?:[1-9]|[1-9][0-9]+)\.[0-9]+pt too wide\)/.test(result.log)) {
-      throw new Error('PDF 存在文本溢出，请缩短内容后重试');
-    }
-    const pdfPath = await saveArtifact(`${base}.pdf`, result.pdf, 'application/pdf');
-    build = { id: buildId, presetId: id, presetName: preset.name, iteration, contentHash: hash, createdAt: new Date().toISOString(), texPath, pdfPath, pageCount: result.pageCount, status: 'ready' };
+    result = await compileTex(tex, photo);
   } catch (error) {
-    build = { id: buildId, presetId: id, presetName: preset.name, iteration, contentHash: hash, createdAt: new Date().toISOString(), texPath, pdfPath: null, pageCount: null, status: 'tex_only', error: error instanceof Error ? error.message : String(error) };
+    console.error('PDF compilation failed', error);
+    return NextResponse.json({ error: 'PDF 生成失败，请重试；若持续失败，请检查内容或编译服务' }, { status: 500 });
   }
+  const warning = pdfLayoutWarning(result.log);
+  const [texPath, pdfPath] = await Promise.all([
+    saveArtifact(`${base}.tex`, tex, 'application/x-tex; charset=utf-8'),
+    saveArtifact(`${base}.pdf`, result.pdf, 'application/pdf'),
+  ]);
+  const build: ResumeBuild = {
+    id: buildId, presetId: id, presetName: preset.name, iteration, contentHash: hash,
+    createdAt: new Date().toISOString(), texPath, pdfPath, pageCount: result.pageCount,
+    status: 'ready', ...(warning ? { warning } : {}),
+  };
   const next = await updateState((current) => {
     current.builds.unshift(build);
     current.builds = keepRecentBuilds(current.builds);
     return current;
   });
-  return NextResponse.json({ build, state: toAdminState(next), warning: build.error }, { status: build.status === 'ready' ? 201 : 202 });
+  return NextResponse.json({ build, state: toAdminState(next), warning }, { status: 201 });
 }

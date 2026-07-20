@@ -371,11 +371,11 @@ export default function BonCvApp() {
     setMessage('');
     try {
       const response = await fetch(`/api/resumes/${presetId}/build`, { method: 'POST' });
-      const result = await response.json() as { state?: AdminState; error?: string };
+      const result = await response.json() as { state?: AdminState; error?: string; warning?: string };
       if (!response.ok) throw new Error(result.error || '生成失败');
       if (result.state) setData(result.state);
       setTab('builds');
-      setMessage('简历已生成，可以预览或下载 TeX 和 PDF。');
+      setMessage(result.warning || 'PDF 已自动生成，可以预览或下载。');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '生成失败');
     } finally {
@@ -655,7 +655,7 @@ export default function BonCvApp() {
                     {group.builds.map((build) => (
                       <article className="build-card" key={build.id}>
                         <div className={`file-icon ${build.status}`}><FileText size={21} /></div>
-                        <div className="build-info"><strong>第 {build.iteration} 版</strong><span>{formatTime(build.createdAt)} · {build.status === 'ready' ? `${build.pageCount ?? '—'} 页 PDF` : 'TeX 已生成'}</span></div>
+                        <div className="build-info"><strong>第 {build.iteration} 版</strong><span>{formatTime(build.createdAt)} · {build.status === 'ready' ? `${build.pageCount ?? '—'} 页 PDF` : '旧版本：仅 TeX'}</span></div>
                         <div className="download-group">
                           <a href={`/api/files/${build.id}/tex`} aria-label={`下载 ${directionName} 第 ${build.iteration} 版 TeX`} title="下载 TeX"><FileCode2 size={17} /></a>
                           {build.pdfPath && <button type="button" aria-label={`预览 ${directionName} 第 ${build.iteration} 版 PDF`} title="预览 PDF" onClick={() => setPreviewBuildId(build.id)}><Eye size={17} /></button>}

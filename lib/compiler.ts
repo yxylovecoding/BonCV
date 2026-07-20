@@ -43,6 +43,12 @@ function pageCountFromLog(log: string) {
   return match ? Number(match[1]) : null;
 }
 
+export function pdfLayoutWarning(log: string) {
+  return /Overfull \\hbox \((?:[1-9]|[1-9][0-9]+)\.[0-9]+pt too wide\)/.test(log)
+    ? 'PDF 已生成，但检测到部分文本可能超出页面边界，请预览检查'
+    : undefined;
+}
+
 export async function compileTex(tex: string, photo?: { content: Buffer; filename: string }) {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'boncv-'));
   const input = path.join(directory, 'resume.tex');
