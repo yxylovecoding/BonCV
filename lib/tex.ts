@@ -32,14 +32,14 @@ function renderEducationEntry(entry: CvEntry) {
   const role = texEscape(entry.role);
   const summary = texEscape(entry.summary);
   const detail = role && summary ? `${role}（${summary}）` : role || summary;
-  const highlights = entry.highlights.map((item) => `\\cvedetail{${emphasizedLabel(item)}}`).join('\n');
+  const highlights = entry.highlights.filter(Boolean).map((item) => `\\cvedetail{${emphasizedLabel(item)}}`).join('\n');
   return `\\cveducation{${texEscape(entry.organization)}}{${texEscape(entry.title)}}{${detail}}{${entryDate(entry)}}\n${highlights}`;
 }
 
 function renderSkillsEntry(entry: CvEntry) {
   const heading = [entry.organization, entry.title].filter(Boolean).map(texEscape).join(' · ');
   const summary = entry.summary ? `\\cvskillline{${emphasizedLabel(entry.summary)}}` : '';
-  const highlights = entry.highlights.map((item) => `\\cvskillline{${emphasizedLabel(item)}}`).join('\n');
+  const highlights = entry.highlights.filter(Boolean).map((item) => `\\cvskillline{${emphasizedLabel(item)}}`).join('\n');
   const showHeading = heading && !['技术与兴趣', '综合技能'].includes(entry.title);
   return `${showHeading ? `\\cvheading{${heading}}{${entryDate(entry)}}` : ''}\n${summary}\n${highlights}`;
 }
@@ -55,7 +55,7 @@ function renderStandardEntry(entry: CvEntry, kind: CvSection['kind']) {
   const heading = [entry.organization, entry.title].filter(Boolean).map(texEscape).join(' · ');
   const role = entry.role ? `（${texEscape(entry.role)}）` : '';
   const summary = entry.summary ? `\\item \\textbf{${summaryLabel(kind)}：}${texEscape(entry.summary)}` : '';
-  const bullets = entry.highlights.map((item) => `\\item ${emphasizedLabel(item)}`).join('\n');
+  const bullets = entry.highlights.filter(Boolean).map((item) => `\\item ${emphasizedLabel(item)}`).join('\n');
   const items = summary || bullets
     ? `\\begin{cvitems}\n${[summary, bullets].filter(Boolean).join('\n')}\n\\end{cvitems}`
     : '';

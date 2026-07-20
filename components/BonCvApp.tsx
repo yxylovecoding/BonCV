@@ -8,6 +8,7 @@ import {
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { groupBuildsByPreset } from '@/lib/builds';
+import { compactHighlights, highlightsFromTextarea } from '@/lib/highlights';
 import { completeOrder, reorderById } from '@/lib/order';
 import type {
   AdminState, CvEntry, CvSection, ProfileField, ResumeEntryOverride, ResumePreset, SectionKind,
@@ -543,7 +544,16 @@ export default function BonCvApp() {
                           </div>
                         )}
                         <label className="field"><span>简介</span><textarea value={entry.summary} onChange={(event) => updateEntry(section.id, entry.id, (item) => { item.summary = event.target.value; })} /></label>
-                        <label className="field"><span>要点（每行一条）</span><textarea value={entry.highlights.join('\n')} onChange={(event) => updateEntry(section.id, entry.id, (item) => { item.highlights = event.target.value.split('\n').filter(Boolean); })} /></label>
+                        <label className="field">
+                          <span>要点（每行一条）</span>
+                          <textarea
+                            value={entry.highlights.join('\n')}
+                            onChange={(event) => updateEntry(section.id, entry.id, (item) => { item.highlights = highlightsFromTextarea(event.target.value); })}
+                            onBlur={() => {
+                              if (entry.highlights.some((item) => !item)) updateEntry(section.id, entry.id, (item) => { item.highlights = compactHighlights(item.highlights); });
+                            }}
+                          />
+                        </label>
                         <button className="danger-link" onClick={() => removeEntry(section.id, entry.id)}><Trash2 size={14} />删除这段经历</button>
                       </div>
                     </details>
@@ -611,7 +621,16 @@ export default function BonCvApp() {
                                 <label className="field"><span>JD 专属角色/定位</span><input value={override.role ?? entry.role} onChange={(event) => updateEntryOverride(preset.id, entry.id, (item) => { item.role = event.target.value; })} /></label>
                               </div>
                               <label className="field"><span>JD 专属简介</span><textarea value={override.summary ?? entry.summary} onChange={(event) => updateEntryOverride(preset.id, entry.id, (item) => { item.summary = event.target.value; })} /></label>
-                              <label className="field"><span>JD 专属要点（每行一条）</span><textarea value={(override.highlights ?? entry.highlights).join('\n')} onChange={(event) => updateEntryOverride(preset.id, entry.id, (item) => { item.highlights = event.target.value.split('\n').filter(Boolean); })} /></label>
+                              <label className="field">
+                                <span>JD 专属要点（每行一条）</span>
+                                <textarea
+                                  value={(override.highlights ?? entry.highlights).join('\n')}
+                                  onChange={(event) => updateEntryOverride(preset.id, entry.id, (item) => { item.highlights = highlightsFromTextarea(event.target.value); })}
+                                  onBlur={() => {
+                                    if (override.highlights?.some((item) => !item)) updateEntryOverride(preset.id, entry.id, (item) => { item.highlights = compactHighlights(item.highlights ?? []); });
+                                  }}
+                                />
+                              </label>
                             </div>
                           )}
                         </div>
