@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { waitForPendingSave } from '@/lib/autosave';
 import { groupBuildsByPreset } from '@/lib/builds';
 import { compactHighlights, highlightsFromTextarea } from '@/lib/highlights';
 import { completeOrder, reorderById } from '@/lib/order';
@@ -370,6 +371,7 @@ export default function BonCvApp() {
     setBusyPreset(presetId);
     setMessage('');
     try {
+      await waitForPendingSave(() => dirtyRef.current > 0);
       const response = await fetch(`/api/resumes/${presetId}/build`, { method: 'POST' });
       const result = await response.json() as { state?: AdminState; error?: string; warning?: string };
       if (!response.ok) throw new Error(result.error || '生成失败');

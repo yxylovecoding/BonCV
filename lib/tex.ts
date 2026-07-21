@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { completeOrder } from './order';
 import { normalizeHeadlineItems } from './profile';
 import type { BonCvState, CvEntry, CvSection, ResumePreset } from './types';
 
@@ -112,7 +113,8 @@ export function renderResumeTex(state: BonCvState, preset: ResumePreset, photoFi
   const fields = new Set(preset.profileFields);
   const selected = new Set(preset.selectedEntryIds);
   const order = new Map(preset.entryOrder.map((entryId, index) => [entryId, index]));
-  const sectionOrder = new Map(preset.sectionOrder.map((sectionId, index) => [sectionId, index]));
+  const sectionIds = completeOrder(state.sections.map((section) => section.id), preset.sectionOrder);
+  const sectionOrder = new Map(sectionIds.map((sectionId, index) => [sectionId, index]));
   const sections = state.sections
     .map((section) => ({
       ...section,
@@ -122,7 +124,7 @@ export function renderResumeTex(state: BonCvState, preset: ResumePreset, photoFi
         .sort((a, b) => (order.get(a.id) ?? 999) - (order.get(b.id) ?? 999)),
     }))
     .filter((section) => section.entries.length)
-    .sort((a, b) => (sectionOrder.get(a.id) ?? a.order) - (sectionOrder.get(b.id) ?? b.order));
+    .sort((a, b) => (sectionOrder.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (sectionOrder.get(b.id) ?? Number.MAX_SAFE_INTEGER));
   const contactItems = [
     fields.has('phone') && state.profile.phone ? `\\cvprofileline{手机}{${texEscape(state.profile.phone)}}` : '',
     fields.has('email') && state.profile.email ? `\\cvprofileline{邮箱}{${texEscape(state.profile.email)}}` : '',
@@ -144,7 +146,7 @@ export function renderResumeTex(state: BonCvState, preset: ResumePreset, photoFi
 \\end{minipage}}
 \\begin{minipage}[t][${identityHeight}mm][t]{0.72\\textwidth}\\vspace{0pt}
 ${headline ? `{\\color{keycolor}\\bfseries\\fontsize{10.5}{13}\\selectfont ${headline}}\\par\\vspace{5pt}` : ''}
-{\\small ${contactLines}}
+{\\fontsize{10}{13}\\selectfont ${contactLines}}
 \\end{minipage}\\hfill
 \\begin{minipage}[t][${identityHeight}mm][t]{0.20\\textwidth}\\vspace{0pt}
 ${photo}
@@ -174,9 +176,9 @@ ${photo}
 \newcommand{\cvsection}[1]{\vspace{2pt}{\fontsize{12}{14}\selectfont\bfseries\color{keycolor}#1}\par\vspace{1pt}{\color{keycolor}\hrule height 0.45pt}\vspace{2pt}}
 \newcommand{\cvheading}[2]{\vspace{1pt}\begin{tabular*}{\textwidth}{@{}l@{\extracolsep{\fill}}r@{}}{\fontsize{10.5}{12.5}\selectfont\textbf{#1}} & {\fontsize{10.5}{12.5}\selectfont #2}\\\end{tabular*}\par\vspace{-1pt}}
 \newcommand{\cveducation}[4]{\begin{tabular*}{\textwidth}{@{}p{0.23\textwidth}@{\extracolsep{\fill}}p{0.36\textwidth}p{0.15\textwidth}r@{}}{\fontsize{10.5}{12.5}\selectfont\textbf{#1}} & {\fontsize{10.5}{12.5}\selectfont #2} & {\fontsize{10.5}{12.5}\selectfont\textbf{#3}} & {\fontsize{10.5}{12.5}\selectfont #4}\\\end{tabular*}\par\vspace{-1pt}}
-\newcommand{\cvedetail}[1]{{\small #1}\par\vspace{1pt}}
-\newcommand{\cvskillline}[1]{{\small #1}\par\vspace{1pt}}
-\newenvironment{cvitems}{\begin{itemize}\small\setlength{\itemsep}{0pt}\setlength{\parsep}{0pt}\setlength{\topsep}{1pt}\setlength{\partopsep}{0pt}}{\end{itemize}\vspace{-3pt}}
+\newcommand{\cvedetail}[1]{{\fontsize{9.5}{11.5}\selectfont #1}\par\vspace{1pt}}
+\newcommand{\cvskillline}[1]{{\fontsize{9.5}{11.5}\selectfont #1}\par\vspace{1pt}}
+\newenvironment{cvitems}{\begin{itemize}\fontsize{9.5}{11.5}\selectfont\setlength{\itemsep}{0pt}\setlength{\parsep}{0pt}\setlength{\topsep}{1pt}\setlength{\partopsep}{0pt}}{\end{itemize}\vspace{-3pt}}
 \begin{document}
 ${identity}
 ${sections.map((section) => `\\cvsection{${texEscape(section.title)}}\n${section.entries.map((entry) => renderEntry(entry, section.kind)).join('\n')}`).join('\n')}

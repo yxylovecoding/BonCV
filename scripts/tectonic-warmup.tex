@@ -12,13 +12,13 @@
 \newcommand{\cvsection}[1]{\vspace{3pt}{\fontsize{12}{14}\selectfont\bfseries\color{keycolor}#1}\par\vspace{1pt}{\color{keycolor}\hrule height 0.45pt}\vspace{3pt}}
 \newcommand{\cvheading}[2]{\vspace{1pt}\begin{tabular*}{\textwidth}{@{}l@{\extracolsep{\fill}}r@{}}{\fontsize{10.5}{12.5}\selectfont\textbf{#1}} & {\fontsize{10.5}{12.5}\selectfont #2}\\\end{tabular*}\par\vspace{-1pt}}
 \newcommand{\cveducation}[4]{\begin{tabular*}{\textwidth}{@{}p{0.23\textwidth}@{\extracolsep{\fill}}p{0.36\textwidth}p{0.15\textwidth}r@{}}{\fontsize{10.5}{12.5}\selectfont\textbf{#1}} & {\fontsize{10.5}{12.5}\selectfont #2} & {\fontsize{10.5}{12.5}\selectfont\textbf{#3}} & {\fontsize{10.5}{12.5}\selectfont #4}\\\end{tabular*}\par\vspace{-1pt}}
-\newcommand{\cvedetail}[1]{{\small #1}\par\vspace{1pt}}
-\newcommand{\cvskillline}[1]{{\small #1}\par\vspace{1pt}}
-\newenvironment{cvitems}{\begin{itemize}\small}{\end{itemize}\vspace{-2pt}}
+\newcommand{\cvedetail}[1]{{\fontsize{9.5}{11.5}\selectfont #1}\par\vspace{1pt}}
+\newcommand{\cvskillline}[1]{{\fontsize{9.5}{11.5}\selectfont #1}\par\vspace{1pt}}
+\newenvironment{cvitems}{\begin{itemize}\fontsize{9.5}{11.5}\selectfont}{\end{itemize}\vspace{-2pt}}
 \begin{document}
 {\fontsize{26}{31}\selectfont\bfseries\ziju{0.42}示例用户}
 {\color{keycolor}\bfseries\fontsize{10.5}{15}\selectfont 长期实习}\par
-{\small\cvprofileline{手机}{13800000000}\cvprofileline{邮箱}{hello@example.com}}
+{\fontsize{10}{13}\selectfont\cvprofileline{手机}{13800000000}\cvprofileline{邮箱}{hello@example.com}}
 \cvsection{教育背景}
 \cveducation{示例大学}{机械专业}{硕士（推免入学）}{2025-09 -- 至今}
 \cvedetail{\textbf{GPA：}3.5/4.0}

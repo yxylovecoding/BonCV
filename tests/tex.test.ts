@@ -79,7 +79,8 @@ describe('TeX rendering', () => {
     expect(tex).toContain(String.raw`\setlength{\topmargin}{-0.53in}`);
     expect(tex).toContain(String.raw`\setlength{\textheight}{10.83in}`);
     expect(tex).toContain(String.raw`\setlength{\leftmargini}{10pt}`);
-    expect(tex).toContain(String.raw`\newenvironment{cvitems}{\begin{itemize}\small\setlength{\itemsep}{0pt}`);
+    expect(tex).toContain(String.raw`\newenvironment{cvitems}{\begin{itemize}\fontsize{9.5}{11.5}\selectfont`);
+    expect(tex).toContain('{\\fontsize{10}{13}\\selectfont \\cvprofileline{手机}');
   });
 
   it('keeps labeled education summaries out of the degree column', () => {
@@ -89,6 +90,14 @@ describe('TeX rendering', () => {
     expect(tex).toContain(String.raw`\cveducation{示例大学}{飞行器设计与工程}{学士}{2021-09 -- 2025-06}`);
     expect(tex).toContain(String.raw`\cvedetail{\textbf{GPA：}4.2/5.0；均分：92/100；专业排名：3/291}`);
     expect(tex).not.toContain('学士（GPA');
+  });
+
+  it('uses the configured section order even when older presets omit newer sections', () => {
+    const state = structuredClone(demoState);
+    state.presets[0].sectionOrder = ['skills'];
+    const tex = renderResumeTex(state, state.presets[0]);
+    expect(tex.indexOf(String.raw`\cvsection{综合技能}`)).toBeLessThan(tex.indexOf(String.raw`\cvsection{教育背景}`));
+    expect(tex.indexOf(String.raw`\cvsection{教育背景}`)).toBeLessThan(tex.indexOf(String.raw`\cvsection{科研经历}`));
   });
 
   it('uses the JD-specific entry version without changing shared content', () => {
