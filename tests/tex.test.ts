@@ -82,6 +82,15 @@ describe('TeX rendering', () => {
     expect(tex).toContain(String.raw`\newenvironment{cvitems}{\begin{itemize}\small\setlength{\itemsep}{0pt}`);
   });
 
+  it('keeps labeled education summaries out of the degree column', () => {
+    const state = structuredClone(demoState);
+    state.sections[0].entries[1].summary = 'GPA：4.2/5.0；均分：92/100；专业排名：3/291';
+    const tex = renderResumeTex(state, state.presets[0]);
+    expect(tex).toContain(String.raw`\cveducation{示例大学}{飞行器设计与工程}{学士}{2021-09 -- 2025-06}`);
+    expect(tex).toContain(String.raw`\cvedetail{\textbf{GPA：}4.2/5.0；均分：92/100；专业排名：3/291}`);
+    expect(tex).not.toContain('学士（GPA');
+  });
+
   it('uses the JD-specific entry version without changing shared content', () => {
     const state = structuredClone(demoState);
     const preset = state.presets[0];

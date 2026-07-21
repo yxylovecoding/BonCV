@@ -31,9 +31,13 @@ function emphasizedLabel(value: string) {
 function renderEducationEntry(entry: CvEntry) {
   const role = texEscape(entry.role);
   const summary = texEscape(entry.summary);
-  const detail = role && summary ? `${role}（${summary}）` : role || summary;
-  const highlights = entry.highlights.filter(Boolean).map((item) => `\\cvedetail{${emphasizedLabel(item)}}`).join('\n');
-  return `\\cveducation{${texEscape(entry.organization)}}{${texEscape(entry.title)}}{${detail}}{${entryDate(entry)}}\n${highlights}`;
+  const summaryIsDetail = /^.{1,14}[：:]/.test(entry.summary);
+  const degree = role && summary && !summaryIsDetail ? `${role}（${summary}）` : role || (summaryIsDetail ? '' : summary);
+  const details = [
+    summaryIsDetail ? `\\cvedetail{${emphasizedLabel(entry.summary)}}` : '',
+    ...entry.highlights.filter(Boolean).map((item) => `\\cvedetail{${emphasizedLabel(item)}}`),
+  ].filter(Boolean).join('\n');
+  return `\\cveducation{${texEscape(entry.organization)}}{${texEscape(entry.title)}}{${degree}}{${entryDate(entry)}}\n${details}`;
 }
 
 function renderSkillsEntry(entry: CvEntry) {
