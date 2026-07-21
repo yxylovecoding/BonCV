@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { demoState } from '@/lib/fixtures';
-import { renderResumeTex, texEscape } from '@/lib/tex';
+import { identityHeightMm, renderResumeTex, texEscape } from '@/lib/tex';
 
 describe('TeX rendering', () => {
   it('escapes TeX metacharacters', () => {
@@ -44,6 +44,20 @@ describe('TeX rendering', () => {
     expect(tex).toContain(String.raw`\definecolor{keycolor}{RGB}{102,8,116}`);
     expect(tex).toContain(String.raw`\cveducation{示例大学}{机械专业}{硕士（推免入学）}{2025-09 -- 至今}`);
     expect(tex).toContain(String.raw`\item \textbf{项目介绍：}在边缘计算平台实现大语言模型离线部署。`);
+  });
+
+  it('expands and compacts the identity header for many headline and contact rows', () => {
+    const state = structuredClone(demoState);
+    state.profile.headline = ['小论文已发', '大论文 75%', '最早 8.24 到岗', '可实习一年以上', '每周到岗 4-5 天'];
+    state.profile.politicalStatus = '中共党员';
+    state.profile.origin = '江苏省常州市';
+    state.presets[0].profileFields = ['headline', 'phone', 'email', 'politicalStatus', 'origin'];
+
+    const tex = renderResumeTex(state, state.presets[0]);
+
+    expect(identityHeightMm(5, 4)).toBe(47);
+    expect(tex.match(/\\begin\{minipage\}\[t\]\[47mm\]\[t\]/g)).toHaveLength(3);
+    expect(tex).toContain(String.raw`\fontsize{9.5}{12.5}\selectfont`);
   });
 
   it('renders legacy middle-dot headlines as separate lines', () => {

@@ -78,6 +78,11 @@ export function entryForPreset(entry: CvEntry, preset: ResumePreset): CvEntry {
   };
 }
 
+export function identityHeightMm(headlineLines: number, contactLines: number) {
+  const headlineLineHeight = headlineLines > 3 ? 4.5 : 5.5;
+  return Math.max(38, Math.ceil(8 + headlineLines * headlineLineHeight + contactLines * 4));
+}
+
 export function renderResumeTex(state: BonCvState, preset: ResumePreset, photoFilename?: string) {
   const fields = new Set(preset.profileFields);
   const selected = new Set(preset.selectedEntryIds);
@@ -93,27 +98,30 @@ export function renderResumeTex(state: BonCvState, preset: ResumePreset, photoFi
     }))
     .filter((section) => section.entries.length)
     .sort((a, b) => (sectionOrder.get(a.id) ?? a.order) - (sectionOrder.get(b.id) ?? b.order));
-  const contactLines = [
+  const contactItems = [
     fields.has('phone') && state.profile.phone ? `\\cvprofileline{手机}{${texEscape(state.profile.phone)}}` : '',
     fields.has('email') && state.profile.email ? `\\cvprofileline{邮箱}{${texEscape(state.profile.email)}}` : '',
     fields.has('politicalStatus') && state.profile.politicalStatus ? `\\cvprofileline{政治面貌}{${texEscape(state.profile.politicalStatus)}}` : '',
     fields.has('origin') && state.profile.origin ? `\\cvprofileline{籍贯}{${texEscape(state.profile.origin)}}` : '',
-  ].filter(Boolean).join('\n');
-  const headline = fields.has('headline')
-    ? normalizeHeadlineItems(state.profile.headline).map(texEscape).join('\\par\n')
-    : '';
+  ].filter(Boolean);
+  const contactLines = contactItems.join('\n');
+  const headlineItems = fields.has('headline') ? normalizeHeadlineItems(state.profile.headline) : [];
+  const headline = headlineItems.map(texEscape).join('\\par\n');
+  const headlineLineCount = headlineItems.reduce((lines, item) => lines + Math.max(1, Math.ceil([...item].length / 18)), 0);
+  const identityHeight = identityHeightMm(headlineLineCount, contactItems.length);
+  const headlineFont = headlineLineCount > 3 ? { size: 9.5, leading: 12.5 } : { size: 10.5, leading: 15 };
   const photo = photoFilename
     ? `\\vspace{3mm}\\raggedleft\\includegraphics[width=27mm,height=34mm,keepaspectratio]{${texEscape(photoFilename)}}`
     : '';
   const identity = `\\noindent
-\\makebox[0pt][l]{\\begin{minipage}[t][38mm][t]{\\textwidth}\\vspace{5mm}\\centering
+\\makebox[0pt][l]{\\begin{minipage}[t][${identityHeight}mm][t]{\\textwidth}\\vspace{5mm}\\centering
 {\\fontsize{26}{31}\\selectfont\\bfseries\\ziju{0.42}${texEscape(state.profile.name)}}
 \\end{minipage}}
-\\begin{minipage}[t][38mm][t]{0.45\\textwidth}\\vspace{0pt}
-${headline ? `{\\color{keycolor}\\bfseries\\fontsize{10.5}{15}\\selectfont ${headline}}\\par\\vspace{3pt}` : ''}
+\\begin{minipage}[t][${identityHeight}mm][t]{0.45\\textwidth}\\vspace{0pt}
+${headline ? `{\\color{keycolor}\\bfseries\\fontsize{${headlineFont.size}}{${headlineFont.leading}}\\selectfont ${headline}}\\par\\vspace{3pt}` : ''}
 {\\small ${contactLines}}
 \\end{minipage}\\hfill
-\\begin{minipage}[t][38mm][t]{0.25\\textwidth}\\vspace{0pt}
+\\begin{minipage}[t][${identityHeight}mm][t]{0.25\\textwidth}\\vspace{0pt}
 ${photo}
 \\end{minipage}\\par\\vspace{-1pt}`;
 
