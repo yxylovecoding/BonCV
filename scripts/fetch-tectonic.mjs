@@ -4,7 +4,7 @@ import { spawn } from 'node:child_process';
 import path from 'node:path';
 
 const VERSION = '0.16.9';
-const WARMUP_REVISION = '2';
+const WARMUP_REVISION = '3';
 const SHA256 = '60b13a0826ae7ad9ce34b4a2df06bff2cfcfa6dda8a915477c0cbb84e1a4a902';
 const URL = `https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%40${VERSION}/tectonic-${VERSION}-x86_64-unknown-linux-musl.tar.gz`;
 const targetDir = path.join(process.cwd(), 'vendor', 'tectonic', 'bin');
@@ -40,36 +40,22 @@ if (!hasBinary) {
 try { await access(cacheMarker); process.exit(0); } catch {}
 await mkdir(cacheDir, { recursive: true });
 await mkdir(warmupDir, { recursive: true });
-const warmupSource = String.raw`\documentclass[UTF8,fontset=fandol,10pt,a4paper]{ctexart}
-\ExplSyntaxOn\pdf_uncompress:\ExplSyntaxOff
-\usepackage{xcolor}
-\usepackage{hyperref}
-\usepackage{graphicx}
-\definecolor{keycolor}{RGB}{102,8,116}
-\hypersetup{hidelinks}
-\newcommand{\cvsection}[1]{{\large\bfseries\color{keycolor}#1}\par}
-\newcommand{\cvheading}[2]{\begin{tabular*}{\textwidth}{@{}l@{\extracolsep{\fill}}r@{}}\textbf{#1} & #2\\\end{tabular*}\par}
-\newcommand{\cvrole}[1]{{\small\textit{#1}}\par}
-\newcommand{\cvsummary}[1]{{\small #1}\par}
-\begin{document}
-\begin{center}{\zihao{-1}\bfseries\ziju{0.35}BonCV 简历}\\[4pt]\end{center}
-\textcolor{keycolor}{\textbf{中文标题 Headline}}\\
-{\small 手机：000 \qquad 邮箱：example@example.com}\par
-\cvsection{教育经历 Education}
-\cvheading{示例组织 · Example Organization}{2024 -- 2026}
-\cvrole{示例角色 Example Role}
-\cvsummary{中文摘要与 Latin Modern 字体离线预热。}
-\begin{itemize}\item 中文项目经历与 English bullet.\end{itemize}
-\end{document}`;
+const warmupSource = await readFile(new URL('./tectonic-warmup.tex', import.meta.url), 'utf8');
 const warmupFile = path.join(warmupDir, 'warmup.tex');
 await writeFile(warmupFile, warmupSource);
-await new Promise((resolve, reject) => {
-  const child = spawn(target, ['-X', 'compile', '--untrusted', '--outdir', warmupDir, warmupFile], {
-    env: { ...process.env, TECTONIC_CACHE_DIR: cacheDir, TECTONIC_UNTRUSTED_MODE: '1' },
-    stdio: 'inherit',
+
+async function compileWarmup(extraArgs = []) {
+  await new Promise((resolve, reject) => {
+    const child = spawn(target, ['-X', 'compile', '--untrusted', '--outdir', warmupDir, ...extraArgs, warmupFile], {
+      env: { ...process.env, TECTONIC_CACHE_DIR: cacheDir, TECTONIC_UNTRUSTED_MODE: '1' },
+      stdio: 'inherit',
+    });
+    child.on('error', reject);
+    child.on('close', (code) => code === 0 ? resolve() : reject(new Error(`Tectonic warmup exited with ${code}`)));
   });
-  child.on('error', reject);
-  child.on('close', (code) => code === 0 ? resolve() : reject(new Error(`Tectonic warmup exited with ${code}`)));
-});
+}
+
+await compileWarmup();
+await compileWarmup(['--only-cached']);
 await writeFile(cacheMarker, `${VERSION}\n`);
 await rm(warmupDir, { recursive: true, force: true });

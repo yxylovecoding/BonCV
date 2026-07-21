@@ -1,0 +1,33 @@
+\documentclass[UTF8,fontset=fandol,10pt,a4paper]{ctexart}
+\ExplSyntaxOn\pdf_uncompress:\ExplSyntaxOff
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\definecolor{keycolor}{RGB}{102,8,116}
+\hypersetup{hidelinks}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\tabcolsep}{0pt}
+\newcommand{\cvprofileline}[2]{\textbf{#1：}#2\par\vspace{1pt}}
+\newcommand{\cvsection}[1]{\vspace{3pt}{\fontsize{12}{14}\selectfont\bfseries\color{keycolor}#1}\par\vspace{1pt}{\color{keycolor}\hrule height 0.45pt}\vspace{3pt}}
+\newcommand{\cvheading}[2]{\vspace{1pt}\begin{tabular*}{\textwidth}{@{}l@{\extracolsep{\fill}}r@{}}{\fontsize{10.5}{12.5}\selectfont\textbf{#1}} & {\fontsize{10.5}{12.5}\selectfont #2}\\\end{tabular*}\par\vspace{-1pt}}
+\newcommand{\cveducation}[4]{\begin{tabular*}{\textwidth}{@{}p{0.23\textwidth}@{\extracolsep{\fill}}p{0.36\textwidth}p{0.15\textwidth}r@{}}{\fontsize{10.5}{12.5}\selectfont\textbf{#1}} & {\fontsize{10.5}{12.5}\selectfont #2} & {\fontsize{10.5}{12.5}\selectfont\textbf{#3}} & {\fontsize{10.5}{12.5}\selectfont #4}\\\end{tabular*}\par\vspace{-1pt}}
+\newcommand{\cvedetail}[1]{{\small #1}\par\vspace{1pt}}
+\newcommand{\cvskillline}[1]{{\small #1}\par\vspace{1pt}}
+\newenvironment{cvitems}{\begin{itemize}\small}{\end{itemize}\vspace{-2pt}}
+\begin{document}
+{\fontsize{26}{31}\selectfont\bfseries\ziju{0.42}示例用户}
+{\color{keycolor}\bfseries\fontsize{10.5}{15}\selectfont 长期实习}\par
+{\small\cvprofileline{手机}{13800000000}\cvprofileline{邮箱}{hello@example.com}}
+\cvsection{教育背景}
+\cveducation{示例大学}{机械专业}{硕士（推免入学）}{2025-09 -- 至今}
+\cvedetail{\textbf{GPA：}3.5/4.0}
+\cvsection{科研经历}
+\cvheading{边缘侧私有化 LLM 部署实践（负责人）}{2024-01 -- 至今}
+\begin{cvitems}
+\item \textbf{项目介绍：}中文项目经历与 English bullet.
+\item \textbf{技术栈：}C++、Python、Matlab
+\end{cvitems}
+\cvsection{综合技能}
+\cvskillline{\textbf{Linux：}良好}
+\end{document}
