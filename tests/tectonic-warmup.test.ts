@@ -13,6 +13,8 @@ describe('Tectonic production cache warmup', () => {
   it('verifies the warmed cache in offline-only mode during installation', async () => {
     const script = await readFile(new URL('../scripts/fetch-tectonic.mjs', import.meta.url), 'utf8');
 
+    expect(script).toContain('const DOWNLOAD_URL =');
+    expect(script).not.toContain('const URL =');
     expect(script).toContain("await compileWarmup(['--only-cached'])");
   });
 });

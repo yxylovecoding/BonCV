@@ -6,7 +6,7 @@ import path from 'node:path';
 const VERSION = '0.16.9';
 const WARMUP_REVISION = '3';
 const SHA256 = '60b13a0826ae7ad9ce34b4a2df06bff2cfcfa6dda8a915477c0cbb84e1a4a902';
-const URL = `https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%40${VERSION}/tectonic-${VERSION}-x86_64-unknown-linux-musl.tar.gz`;
+const DOWNLOAD_URL = `https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%40${VERSION}/tectonic-${VERSION}-x86_64-unknown-linux-musl.tar.gz`;
 const targetDir = path.join(process.cwd(), 'vendor', 'tectonic', 'bin');
 const target = path.join(targetDir, 'tectonic');
 const cacheDir = path.join(process.cwd(), 'vendor', 'tectonic', 'cache');
@@ -20,7 +20,7 @@ let hasBinary = true;
 try { await access(target); } catch { hasBinary = false; }
 
 if (!hasBinary) {
-  const response = await fetch(URL);
+  const response = await fetch(DOWNLOAD_URL);
   if (!response.ok) throw new Error(`Unable to download Tectonic: HTTP ${response.status}`);
   const archive = Buffer.from(await response.arrayBuffer());
   const actual = createHash('sha256').update(archive).digest('hex');
