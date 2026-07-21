@@ -5,7 +5,7 @@ import {
   FileCode2, FileText, GripVertical, KeyRound, Layers, Link2, LoaderCircle, LogOut, Plus,
   RefreshCw, RotateCcw, Save, Settings2, ShieldCheck, Sparkles, Trash2, UserRound, X,
 } from 'lucide-react';
-import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ChangeEvent, ClipboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { waitForPendingSave } from '@/lib/autosave';
 import { groupBuildsByPreset } from '@/lib/builds';
@@ -398,14 +398,28 @@ export default function BonCvApp() {
     if (response.ok) setData(await response.json() as AdminState);
   }
 
-  async function uploadPhoto(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  async function uploadPhotoFile(file: File) {
+    if (!['image/jpeg', 'image/png'].includes(file.type)) {
+      setMessage('请选择 JPG 或 PNG 格式的照片');
+      return;
+    }
     const form = new FormData(); form.append('photo', file);
     const response = await fetch('/api/photo', { method: 'POST', body: form });
     const result = await response.json() as { photoUrl?: string };
     if (response.ok && result.photoUrl) updateProfile('photoUrl', result.photoUrl);
     else setMessage('照片上传失败');
+  }
+
+  async function uploadPhoto(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (file) await uploadPhotoFile(file);
+  }
+
+  function pastePhoto(event: ClipboardEvent<HTMLDivElement>) {
+    const file = Array.from(event.clipboardData.files).find((item) => ['image/jpeg', 'image/png'].includes(item.type));
+    if (!file) return;
+    event.preventDefault();
+    void uploadPhotoFile(file);
   }
 
   async function logout() {
@@ -484,10 +498,10 @@ export default function BonCvApp() {
           <div className="stack content-workspace">
             <section className="panel profile-panel">
               <div className="panel-heading"><div><p className="eyebrow">PROFILE</p><h2>基本信息</h2></div><UserRound size={21} /></div>
-              <div className="photo-row">
+              <div className="photo-row" tabIndex={0} aria-label="照片上传区域" onPaste={pastePhoto}>
                 <div className="photo-placeholder">{data.profile.photoUrl ? <img src="/api/photo" alt="个人照片" /> : data.profile.name.slice(0, 1)}</div>
                 <label className="soft-button">上传照片<input hidden type="file" accept="image/jpeg,image/png" onChange={uploadPhoto} /></label>
-                {!data.profile.photoUrl && <span className="hint">当前为无照片版本</span>}
+                {!data.profile.photoUrl && <span className="hint">当前为无照片版本，也可直接粘贴图片</span>}
               </div>
               <div className="form-grid">
                 <TextField label="姓名" value={data.profile.name} onChange={(value) => updateProfile('name', value)} />
