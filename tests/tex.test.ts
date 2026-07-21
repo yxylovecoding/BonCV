@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { demoState } from '@/lib/fixtures';
-import { identityHeightMm, renderResumeTex, texEscape } from '@/lib/tex';
+import { identityHeightMm, packHeadlineItems, renderResumeTex, texEscape } from '@/lib/tex';
 
 describe('TeX rendering', () => {
   it('escapes TeX metacharacters', () => {
@@ -28,7 +28,7 @@ describe('TeX rendering', () => {
 
   it('references a sanitized local photo filename only when supplied by the build pipeline', () => {
     const tex = renderResumeTex(demoState, { ...demoState.presets[0], profileFields: ['photo'], includePhoto: true }, 'photo.png');
-    expect(tex).toContain('includegraphics[width=27mm,height=34mm,keepaspectratio]{photo.png}');
+    expect(tex).toContain('includegraphics[width=20mm,height=28mm,keepaspectratio]{photo.png}');
     expect(tex).not.toContain(demoState.profile.email);
   });
 
@@ -37,8 +37,8 @@ describe('TeX rendering', () => {
     state.profile.politicalStatus = '中共党员';
     state.profile.origin = '江苏省常州市';
     const tex = renderResumeTex(state, state.presets[0]);
-    expect(tex).toContain(String.raw`\makebox[0pt][l]{\begin{minipage}[t][40mm][t]{\textwidth}`);
-    expect(tex).toContain(String.raw`\begin{minipage}[t][40mm][t]{0.45\textwidth}`);
+    expect(tex).toContain(String.raw`\makebox[0pt][l]{\begin{minipage}[t][36mm][t]{\textwidth}`);
+    expect(tex).toContain(String.raw`\begin{minipage}[t][36mm][t]{0.72\textwidth}`);
     expect(tex).toContain(String.raw`\cvprofileline{手机}{13800000000}`);
     expect(tex).toContain(String.raw`\cvprofileline{政治面貌}{中共党员}`);
     expect(tex).toContain(String.raw`\definecolor{keycolor}{RGB}{102,8,116}`);
@@ -55,17 +55,31 @@ describe('TeX rendering', () => {
 
     const tex = renderResumeTex(state, state.presets[0]);
 
-    expect(identityHeightMm(5, 4)).toBe(52);
-    expect(tex.match(/\\begin\{minipage\}\[t\]\[52mm\]\[t\]/g)).toHaveLength(3);
-    expect(tex).toContain(String.raw`\fontsize{9.5}{12.5}\selectfont`);
+    expect(packHeadlineItems(state.profile.headline)).toEqual([
+      ['小论文已发', '大论文 75%', '最早 8.24 到岗'],
+      ['可实习一年以上', '每周到岗 4-5 天'],
+    ]);
+    expect(identityHeightMm(2, 4)).toBe(36);
+    expect(tex.match(/\\begin\{minipage\}\[t\]\[36mm\]\[t\]/g)).toHaveLength(3);
+    expect(tex).toContain('小论文已发\\quad 大论文 75\\%\\quad 最早 8.24 到岗\\par\n可实习一年以上\\quad 每周到岗 4-5 天');
+    expect(tex).toContain(String.raw`\fontsize{10.5}{13}\selectfont`);
   });
 
-  it('renders legacy middle-dot headlines as separate lines', () => {
+  it('normalizes legacy middle-dot headlines into compact reference-style rows', () => {
     const state = structuredClone(demoState);
     state.profile.headline = ['长期实习 · 每周到岗 4-5 天'];
     const tex = renderResumeTex(state, state.presets[0]);
-    expect(tex).toContain('长期实习\\par\n每周到岗 4-5 天');
+    expect(tex).toContain('长期实习\\quad 每周到岗 4-5 天');
     expect(tex).not.toContain('长期实习 · 每周到岗');
+  });
+
+  it('uses the reference PDF page geometry and compact list spacing', () => {
+    const tex = renderResumeTex(demoState, demoState.presets[0]);
+    expect(tex).toContain(String.raw`\setlength{\oddsidemargin}{-0.62in}`);
+    expect(tex).toContain(String.raw`\setlength{\topmargin}{-0.53in}`);
+    expect(tex).toContain(String.raw`\setlength{\textheight}{10.83in}`);
+    expect(tex).toContain(String.raw`\setlength{\leftmargini}{10pt}`);
+    expect(tex).toContain(String.raw`\newenvironment{cvitems}{\begin{itemize}\small\setlength{\itemsep}{0pt}`);
   });
 
   it('uses the JD-specific entry version without changing shared content', () => {

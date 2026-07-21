@@ -79,8 +79,29 @@ export function entryForPreset(entry: CvEntry, preset: ResumePreset): CvEntry {
 }
 
 export function identityHeightMm(headlineLines: number, contactLines: number) {
-  const headlineLineHeight = headlineLines > 3 ? 4.5 : 5.5;
-  return Math.max(38, Math.ceil(13 + headlineLines * headlineLineHeight + contactLines * 4));
+  return Math.max(36, Math.ceil(7 + headlineLines * 4.8 + contactLines * 4.1));
+}
+
+function displayWidth(value: string) {
+  return [...value].reduce((width, character) => width + (/[^\u0000-\u00ff]/.test(character) ? 2 : 1), 0);
+}
+
+export function packHeadlineItems(items: string[], maxWidth = 44) {
+  const rows: string[][] = [];
+
+  for (const item of items) {
+    const current = rows.at(-1);
+    const nextWidth = (current ?? []).reduce((width, value) => width + displayWidth(value), 0)
+      + Math.max(0, (current?.length ?? 0) * 2)
+      + displayWidth(item);
+    if (!current || current.length >= 3 || nextWidth > maxWidth) {
+      rows.push([item]);
+    } else {
+      current.push(item);
+    }
+  }
+
+  return rows;
 }
 
 export function renderResumeTex(state: BonCvState, preset: ResumePreset, photoFilename?: string) {
@@ -106,22 +127,22 @@ export function renderResumeTex(state: BonCvState, preset: ResumePreset, photoFi
   ].filter(Boolean);
   const contactLines = contactItems.join('\n');
   const headlineItems = fields.has('headline') ? normalizeHeadlineItems(state.profile.headline) : [];
-  const headline = headlineItems.map(texEscape).join('\\par\n');
-  const headlineLineCount = headlineItems.reduce((lines, item) => lines + Math.max(1, Math.ceil([...item].length / 18)), 0);
+  const headlineRows = packHeadlineItems(headlineItems);
+  const headline = headlineRows.map((row) => row.map(texEscape).join('\\quad ')).join('\\par\n');
+  const headlineLineCount = headlineRows.length;
   const identityHeight = identityHeightMm(headlineLineCount, contactItems.length);
-  const headlineFont = headlineLineCount > 3 ? { size: 9.5, leading: 12.5 } : { size: 10.5, leading: 15 };
   const photo = photoFilename
-    ? `\\vspace{3mm}\\raggedleft\\includegraphics[width=27mm,height=34mm,keepaspectratio]{${texEscape(photoFilename)}}`
+    ? `\\raggedleft\\includegraphics[width=20mm,height=28mm,keepaspectratio]{${texEscape(photoFilename)}}`
     : '';
   const identity = `\\noindent
 \\makebox[0pt][l]{\\begin{minipage}[t][${identityHeight}mm][t]{\\textwidth}\\vspace{5mm}\\centering
 {\\fontsize{26}{31}\\selectfont\\bfseries\\ziju{0.42}${texEscape(state.profile.name)}}
 \\end{minipage}}
-\\begin{minipage}[t][${identityHeight}mm][t]{0.45\\textwidth}\\vspace{0pt}
-${headline ? `{\\color{keycolor}\\bfseries\\fontsize{${headlineFont.size}}{${headlineFont.leading}}\\selectfont ${headline}}\\par\\vspace{3pt}` : ''}
+\\begin{minipage}[t][${identityHeight}mm][t]{0.72\\textwidth}\\vspace{0pt}
+${headline ? `{\\color{keycolor}\\bfseries\\fontsize{10.5}{13}\\selectfont ${headline}}\\par\\vspace{5pt}` : ''}
 {\\small ${contactLines}}
 \\end{minipage}\\hfill
-\\begin{minipage}[t][${identityHeight}mm][t]{0.25\\textwidth}\\vspace{0pt}
+\\begin{minipage}[t][${identityHeight}mm][t]{0.20\\textwidth}\\vspace{0pt}
 ${photo}
 \\end{minipage}\\par\\vspace{-1pt}`;
 
@@ -139,22 +160,19 @@ ${photo}
 \setlength{\oddsidemargin}{-0.62in}
 \setlength{\evensidemargin}{-0.62in}
 \setlength{\textwidth}{7.5in}
-\setlength{\topmargin}{-0.65in}
-\setlength{\textheight}{10.85in}
+\setlength{\topmargin}{-0.53in}
+\setlength{\textheight}{10.83in}
 \setlength{\tabcolsep}{0pt}
-\setlength{\leftmargini}{1.3em}
+\setlength{\leftmargini}{10pt}
 \setlength{\labelsep}{0.45em}
+\raggedright
 \newcommand{\cvprofileline}[2]{\textbf{#1：}#2\par\vspace{1pt}}
-\newcommand{\cvsection}[1]{\vspace{3pt}{\fontsize{12}{14}\selectfont\bfseries\color{keycolor}#1}\par\vspace{1pt}{\color{keycolor}\hrule height 0.45pt}\vspace{3pt}}
+\newcommand{\cvsection}[1]{\vspace{2pt}{\fontsize{12}{14}\selectfont\bfseries\color{keycolor}#1}\par\vspace{1pt}{\color{keycolor}\hrule height 0.45pt}\vspace{2pt}}
 \newcommand{\cvheading}[2]{\vspace{1pt}\begin{tabular*}{\textwidth}{@{}l@{\extracolsep{\fill}}r@{}}{\fontsize{10.5}{12.5}\selectfont\textbf{#1}} & {\fontsize{10.5}{12.5}\selectfont #2}\\\end{tabular*}\par\vspace{-1pt}}
 \newcommand{\cveducation}[4]{\begin{tabular*}{\textwidth}{@{}p{0.23\textwidth}@{\extracolsep{\fill}}p{0.36\textwidth}p{0.15\textwidth}r@{}}{\fontsize{10.5}{12.5}\selectfont\textbf{#1}} & {\fontsize{10.5}{12.5}\selectfont #2} & {\fontsize{10.5}{12.5}\selectfont\textbf{#3}} & {\fontsize{10.5}{12.5}\selectfont #4}\\\end{tabular*}\par\vspace{-1pt}}
 \newcommand{\cvedetail}[1]{{\small #1}\par\vspace{1pt}}
 \newcommand{\cvskillline}[1]{{\small #1}\par\vspace{1pt}}
-\newenvironment{cvitems}{\begin{itemize}\small}{\end{itemize}\vspace{-2pt}}
-\setlength{\itemsep}{0.8pt}
-\setlength{\parsep}{0pt}
-\setlength{\topsep}{1.5pt}
-\setlength{\partopsep}{0pt}
+\newenvironment{cvitems}{\begin{itemize}\small\setlength{\itemsep}{0pt}\setlength{\parsep}{0pt}\setlength{\topsep}{1pt}\setlength{\partopsep}{0pt}}{\end{itemize}\vspace{-3pt}}
 \begin{document}
 ${identity}
 ${sections.map((section) => `\\cvsection{${texEscape(section.title)}}\n${section.entries.map((entry) => renderEntry(entry, section.kind)).join('\n')}`).join('\n')}
