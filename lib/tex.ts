@@ -163,6 +163,7 @@ ${photo}
 \usepackage{xcolor}
 \usepackage{hyperref}
 \usepackage{graphicx}
+\usepackage{adjustbox}
 \definecolor{keycolor}{RGB}{102,8,116}
 \hypersetup{hidelinks}
 \pagestyle{empty}
@@ -186,8 +187,12 @@ ${photo}
 \newcommand{\cvskillline}[1]{{\fontsize{9.5}{11.5}\selectfont #1}\par\vspace{1pt}}
 \newenvironment{cvitems}{\begin{itemize}\fontsize{9.5}{11.5}\selectfont\setlength{\itemsep}{0pt}\setlength{\parsep}{0pt}\setlength{\topsep}{1pt}\setlength{\partopsep}{0pt}}{\end{itemize}\vspace{-3pt}}
 \begin{document}
+\noindent\begin{adjustbox}{max totalsize={\textwidth}{0.96\textheight},valign=t}
+\begin{minipage}{\textwidth}
 ${identity}
 ${sections.map((section) => `\\cvsection{${texEscape(section.title)}}\n${section.entries.map((entry) => renderEntry(entry, section.kind)).join('\n')}`).join('\n')}
+\end{minipage}
+\end{adjustbox}
 \end{document}
 `;
 }

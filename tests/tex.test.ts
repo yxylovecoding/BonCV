@@ -82,6 +82,9 @@ describe('TeX rendering', () => {
     expect(tex).toContain(String.raw`\setlength{\topmargin}{-0.53in}`);
     expect(tex).toContain(String.raw`\setlength{\textheight}{10.83in}`);
     expect(tex).toContain(String.raw`\setlength{\leftmargini}{10pt}`);
+    expect(tex).toContain(String.raw`\usepackage{adjustbox}`);
+    expect(tex).toContain(String.raw`\begin{adjustbox}{max totalsize={\textwidth}{0.96\textheight},valign=t}`);
+    expect(tex).toContain(String.raw`\begin{minipage}{\textwidth}`);
     expect(tex).toContain(String.raw`\newenvironment{cvitems}{\begin{itemize}\fontsize{9.5}{11.5}\selectfont`);
     expect(tex).toContain('{\\fontsize{10}{13}\\selectfont \\cvprofileline{手机}');
   });

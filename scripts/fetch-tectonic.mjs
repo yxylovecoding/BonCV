@@ -4,7 +4,7 @@ import { spawn } from 'node:child_process';
 import path from 'node:path';
 
 const VERSION = '0.16.9';
-const WARMUP_REVISION = '5';
+const WARMUP_REVISION = '6';
 const SHA256 = '60b13a0826ae7ad9ce34b4a2df06bff2cfcfa6dda8a915477c0cbb84e1a4a902';
 const DOWNLOAD_URL = `https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%40${VERSION}/tectonic-${VERSION}-x86_64-unknown-linux-musl.tar.gz`;
 const targetDir = path.join(process.cwd(), 'vendor', 'tectonic', 'bin');

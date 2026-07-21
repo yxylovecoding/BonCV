@@ -9,6 +9,7 @@
 \usepackage{xcolor}
 \usepackage{hyperref}
 \usepackage{graphicx}
+\usepackage{adjustbox}
 \definecolor{keycolor}{RGB}{102,8,116}
 \hypersetup{hidelinks}
 \pagestyle{empty}
@@ -22,6 +23,8 @@
 \newcommand{\cvskillline}[1]{{\fontsize{9.5}{11.5}\selectfont #1}\par\vspace{1pt}}
 \newenvironment{cvitems}{\begin{itemize}\fontsize{9.5}{11.5}\selectfont}{\end{itemize}\vspace{-2pt}}
 \begin{document}
+\noindent\begin{adjustbox}{max totalsize={\textwidth}{0.96\textheight},valign=t}
+\begin{minipage}{\textwidth}
 {\fontsize{26}{31}\selectfont\bfseries\ziju{0.42}示例用户}
 {\color{keycolor}\bfseries\fontsize{10.5}{15}\selectfont 长期实习}\par
 {\fontsize{10}{13}\selectfont\cvprofileline{手机}{13800000000}\cvprofileline{邮箱}{hello@example.com}}
@@ -36,4 +39,6 @@
 \end{cvitems}
 \cvsection{综合技能}
 \cvskillline{\textbf{Linux：}良好}
+\end{minipage}
+\end{adjustbox}
 \end{document}
