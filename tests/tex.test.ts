@@ -75,6 +75,9 @@ describe('TeX rendering', () => {
 
   it('uses the reference PDF page geometry and compact list spacing', () => {
     const tex = renderResumeTex(demoState, demoState.presets[0]);
+    expect(tex).toContain(String.raw`\setmainfont{texgyretermes-regular.otf}`);
+    expect(tex).toContain(String.raw`BoldFont=texgyretermes-bold.otf`);
+    expect(tex).toContain(String.raw`\setCJKmainfont{FandolHei-Regular.otf}[BoldFont=FandolHei-Bold.otf]`);
     expect(tex).toContain(String.raw`\setlength{\oddsidemargin}{-0.62in}`);
     expect(tex).toContain(String.raw`\setlength{\topmargin}{-0.53in}`);
     expect(tex).toContain(String.raw`\setlength{\textheight}{10.83in}`);

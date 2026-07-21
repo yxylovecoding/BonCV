@@ -1,4 +1,4 @@
-import { get, put } from '@vercel/blob';
+import { del, get, put } from '@vercel/blob';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
@@ -26,4 +26,15 @@ export async function readArtifact(location: string) {
   if (!relativePath || relativePath.includes('..') || path.isAbsolute(relativePath)) throw new Error('invalid artifact location');
   const buffer = await fs.readFile(path.join(LOCAL_ARTIFACT_ROOT, relativePath));
   return { stream: new Blob([new Uint8Array(buffer)]).stream(), contentType: undefined };
+}
+
+export async function deleteArtifact(location: string) {
+  if (location.startsWith('https://')) {
+    await del(location);
+    return;
+  }
+  if (!location.startsWith('local:')) throw new Error('invalid artifact location');
+  const relativePath = location.slice('local:'.length);
+  if (!relativePath || relativePath.includes('..') || path.isAbsolute(relativePath)) throw new Error('invalid artifact location');
+  await fs.rm(path.join(LOCAL_ARTIFACT_ROOT, relativePath), { force: true });
 }

@@ -149,6 +149,8 @@ button { color: inherit; }
 .build-info span { color: var(--muted); font-size: 10px; }
 .download-group { display: flex; gap: 5px; }
 .download-group a, .download-group button { color: var(--accent); text-decoration: none; background: white; }
+.download-group .delete-build-button { color: var(--red); }
+.download-group button:disabled { opacity: .55; cursor: wait; }
 
 .pdf-preview-backdrop { position: fixed; inset: 0; z-index: 50; padding: 18px; display: grid; place-items: center; background: rgba(30, 19, 32, .68); backdrop-filter: blur(8px); }
 .pdf-preview-dialog { width: min(100%, 1080px); height: min(92vh, 900px); display: grid; grid-template-rows: auto minmax(0, 1fr); overflow: hidden; border: 1px solid rgba(255,255,255,.45); border-radius: 20px; background: #f4f1f4; box-shadow: 0 30px 90px rgba(28, 14, 30, .34); }

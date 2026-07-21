@@ -158,6 +158,7 @@ export default function BonCvApp() {
   const [revealedKey, setRevealedKey] = useState('');
   const [keyLabel, setKeyLabel] = useState('BonBills FIRE');
   const [busyPreset, setBusyPreset] = useState<string | null>(null);
+  const [deletingBuildId, setDeletingBuildId] = useState<string | null>(null);
   const [previewBuildId, setPreviewBuildId] = useState<string | null>(null);
   const [expandedOverrideKey, setExpandedOverrideKey] = useState<string | null>(null);
   const headlineIdsRef = useRef<string[]>([]);
@@ -382,6 +383,24 @@ export default function BonCvApp() {
       setMessage(error instanceof Error ? error.message : '生成失败');
     } finally {
       setBusyPreset(null);
+    }
+  }
+
+  async function deleteBuild(buildId: string, label: string) {
+    if (!window.confirm(`确定删除${label}吗？对应的 TeX 和 PDF 文件也会被删除。`)) return;
+    setDeletingBuildId(buildId);
+    setMessage('');
+    try {
+      const response = await fetch(`/api/builds/${buildId}`, { method: 'DELETE' });
+      const result = await response.json() as AdminState & { error?: string };
+      if (!response.ok) throw new Error(result.error || '删除失败');
+      if (previewBuildId === buildId) setPreviewBuildId(null);
+      setData(result);
+      setMessage(`${label}已删除。`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : '删除失败');
+    } finally {
+      setDeletingBuildId(null);
     }
   }
 
@@ -676,6 +695,7 @@ export default function BonCvApp() {
                           <a href={`/api/files/${build.id}/tex`} aria-label={`下载 ${directionName} 第 ${build.iteration} 版 TeX`} title="下载 TeX"><FileCode2 size={17} /></a>
                           {build.pdfPath && <button type="button" aria-label={`预览 ${directionName} 第 ${build.iteration} 版 PDF`} title="预览 PDF" onClick={() => setPreviewBuildId(build.id)}><Eye size={17} /></button>}
                           {build.pdfPath && <a href={`/api/files/${build.id}/pdf`} aria-label={`下载 ${directionName} 第 ${build.iteration} 版 PDF`} title="下载 PDF"><Download size={17} /></a>}
+                          <button type="button" className="delete-build-button" aria-label={`删除 ${directionName} 第 ${build.iteration} 版`} title="删除记录" disabled={deletingBuildId === build.id} onClick={() => deleteBuild(build.id, `${directionName}第 ${build.iteration} 版`)}>{deletingBuildId === build.id ? <LoaderCircle className="spin" size={17} /> : <Trash2 size={17} />}</button>
                         </div>
                       </article>
                     ))}
