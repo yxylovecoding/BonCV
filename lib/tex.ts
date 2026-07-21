@@ -80,7 +80,7 @@ export function entryForPreset(entry: CvEntry, preset: ResumePreset): CvEntry {
 
 export function identityHeightMm(headlineLines: number, contactLines: number) {
   const headlineLineHeight = headlineLines > 3 ? 4.5 : 5.5;
-  return Math.max(38, Math.ceil(8 + headlineLines * headlineLineHeight + contactLines * 4));
+  return Math.max(38, Math.ceil(13 + headlineLines * headlineLineHeight + contactLines * 4));
 }
 
 export function renderResumeTex(state: BonCvState, preset: ResumePreset, photoFilename?: string) {

@@ -37,8 +37,8 @@ describe('TeX rendering', () => {
     state.profile.politicalStatus = '中共党员';
     state.profile.origin = '江苏省常州市';
     const tex = renderResumeTex(state, state.presets[0]);
-    expect(tex).toContain(String.raw`\makebox[0pt][l]{\begin{minipage}[t][38mm][t]{\textwidth}`);
-    expect(tex).toContain(String.raw`\begin{minipage}[t][38mm][t]{0.45\textwidth}`);
+    expect(tex).toContain(String.raw`\makebox[0pt][l]{\begin{minipage}[t][40mm][t]{\textwidth}`);
+    expect(tex).toContain(String.raw`\begin{minipage}[t][40mm][t]{0.45\textwidth}`);
     expect(tex).toContain(String.raw`\cvprofileline{手机}{13800000000}`);
     expect(tex).toContain(String.raw`\cvprofileline{政治面貌}{中共党员}`);
     expect(tex).toContain(String.raw`\definecolor{keycolor}{RGB}{102,8,116}`);
@@ -55,8 +55,8 @@ describe('TeX rendering', () => {
 
     const tex = renderResumeTex(state, state.presets[0]);
 
-    expect(identityHeightMm(5, 4)).toBe(47);
-    expect(tex.match(/\\begin\{minipage\}\[t\]\[47mm\]\[t\]/g)).toHaveLength(3);
+    expect(identityHeightMm(5, 4)).toBe(52);
+    expect(tex.match(/\\begin\{minipage\}\[t\]\[52mm\]\[t\]/g)).toHaveLength(3);
     expect(tex).toContain(String.raw`\fontsize{9.5}{12.5}\selectfont`);
   });
 
